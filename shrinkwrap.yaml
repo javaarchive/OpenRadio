@@ -8,6 +8,7 @@ dependencies:
   handlebars: 4.7.6
   socket.io: 2.3.0
   socket.io-express-session: 0.1.3
+  ytdl-core: 2.1.4
 packages:
   /abbrev/1.1.1:
     dev: false
@@ -638,6 +639,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-4Ob+aijPUROIVeCG0Wkedx3iqLk=
+  /html-entities/1.3.1:
+    dev: false
+    resolution:
+      integrity: sha512-rhE/4Z3hIhzHAUKbW8jVcCyuT5oJCXXqhN/6mXXVCpzTmvJnoH2HL/bt3EZ6p55jbFJBeAe1ZNpL5BugLujxNA==
   /http-errors/1.7.2:
     dependencies:
       depd: 1.1.2
@@ -777,6 +782,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+  /m3u8stream/0.7.1:
+    dependencies:
+      miniget: 1.7.0
+      sax: 1.2.4
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-z6ldnAdhbuWOL6LmMkwptSZGzj+qbRytMKLTbNicwF/bJMjf9U9lqD57RNQUFecvWadEkzy6PDjcNJFFgi19uQ==
   /media-typer/0.3.0:
     dev: false
     engines:
@@ -828,6 +842,12 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==
+  /miniget/1.7.0:
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-yrgaDSMRzrfYTkudB4Y6xK8pCb7oAH2bvfv6iPY2m6CedZfs9yK4b/ofh0Vzv08hCYXH/HHkoS8an6fkWtOAQA==
   /minimatch/3.0.4:
     dependencies:
       brace-expansion: 1.1.11
@@ -1534,6 +1554,17 @@ packages:
     dev: false
     resolution:
       integrity: sha1-AI4G2AlDIMNy28L47XagymyKxBk=
+  /ytdl-core/2.1.4:
+    dependencies:
+      html-entities: 1.3.1
+      m3u8stream: 0.7.1
+      miniget: 1.7.0
+      sax: 1.2.4
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-jjxOAfOsUE4tXLrjZeLnvhvMeuE31TpvhP/SHmERNH+s5aDK5oseons8iplRrfxrkh+Gj4QKGzXf06gLMdBvIA==
 registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
@@ -1547,3 +1578,4 @@ specifiers:
   handlebars: ^4.7.6
   socket.io: ^2.3.0
   socket.io-express-session: ^0.1.3
+  ytdl-core: ^2.1.4

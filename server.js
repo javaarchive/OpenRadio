@@ -2,9 +2,11 @@
 const express = require("express");
 const app = express();
 const path = require("path");
+const {MultiWritable} = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
+var { retrieveStream } = require("./contentHandler");
 app.engine(".html", exphbs({ extname: ".html" }));
 app.set("view engine", ".html");
 var SQLiteStore = require("connect-sqlite3")(session);
@@ -37,7 +39,10 @@ const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
 app.use(express.static("public"));
 // Testing streams
-let streams = ["test"];
+let playlists = { test: ["https://www.youtube.com/watch?v=oJuGlqO85YI"] };
+let contentStreams = {};
+let streams = Object.keys(playlists);
+console.log("Init Handlers");
 app.get("/", (req, res) => {
   let output = "";
   for (var i = 0; i < streams.length; i++) {
@@ -45,17 +50,33 @@ app.get("/", (req, res) => {
       output +
       template({ name: streams[i], streamaudiopath: "/stream/" + streams[i] });
   }
-  console.log(output);
+  //console.log(output);
   res.render(__dirname + "/views/index.html", {
     ...config.webexports,
     ...{ stations: output }
   });
 });
+const PassThrough = require("stream").PassThrough;
 app.get("/stream/:name", async function(req, res) {
+  res.set({
+    "Content-Type": "audio/mpeg3",
+    "Transfer-Encoding": "chunked"
+  });
   let name = req.params.name;
-  if (name == "test") {
+  console.log("Serving Stream "+name)
+  if (!Object.keys(contentStreams).includes(name)) {
+    let rawStream = retrieveStream(
+      playlists[name][Math.floor(Math.random() * playlists[name].length)]
+    );
+    let outputStream = new MultiWritable();
+    rawStream.pipe(outputStream);
+    contentStreams[name] = outputStream;
   }
-  res.send(req.params.name);
+  contentStreams[name].consumers.push(res);
+  req.on("close", function() {
+        contentStreams[name].consumers = contentStreams[name].consumers.filter(x => x!=res);
+    });
+  //res.send(req.params.name);
 });
 // listen for requests :)
 const listener = http.listen(process.env.PORT, () => {
