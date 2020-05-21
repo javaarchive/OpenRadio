@@ -19,7 +19,8 @@
     "socket.io-express-session": "^0.1.3",
     "body-parser": "^1.19.0",
     "connect-sqlite3": "^0.9.11",
-    "ytdl-core": "^2.1.4"
+    "ytdl-core": "^2.1.4",
+    "fluent-ffmpeg": "^2.1.2"
   },
   "engines": {
     "node": "10.x"

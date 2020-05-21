@@ -5,6 +5,7 @@ dependencies:
   express: 4.17.1
   express-handlebars: 4.0.3
   express-session: 1.17.1
+  fluent-ffmpeg: 2.1.2
   handlebars: 4.7.6
   socket.io: 2.3.0
   socket.io-express-session: 0.1.3
@@ -87,6 +88,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-csOlWGAcRFJaI6m+F2WKdnMKr4HhdhFVBk0H/QbJFMCr+uO2kwohwXQPxw/9OCxp05r5ghVBFSyioixx3gfkNQ==
+  /async/3.2.0:
+    dev: false
+    resolution:
+      integrity: sha512-TR2mEZFVOj2pLStYxLht7TyfuRzaydfpxr3k9RpHIzMgw7A64dzsdqCxH1WJyQdoe8T10nDXd9wnEigmiuHIZw==
   /asynckit/0.4.0:
     dev: false
     resolution:
@@ -516,6 +521,15 @@ packages:
       node: '>= 0.8'
     resolution:
       integrity: sha512-aAWcW57uxVNrQZqFXjITpW3sIUQmHGG3qSb9mUah9MgMC4NeWhNOlNjXEYq3HjRAvL6arUviZGGJsBg6z0zsWA==
+  /fluent-ffmpeg/2.1.2:
+    dependencies:
+      async: 3.2.0
+      which: 1.3.1
+    dev: false
+    engines:
+      node: '>=0.8.0'
+    resolution:
+      integrity: sha1-yVLeIkD4EuvaCqgAbXd27irPfXQ=
   /forever-agent/0.6.1:
     dev: false
     resolution:
@@ -747,6 +761,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-o32U7ZzaLVmGXJ92/llu4fM4dB4=
+  /isexe/2.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=
   /isstream/0.1.2:
     dev: false
     resolution:
@@ -1511,6 +1529,13 @@ packages:
       '0': node >=0.6.0
     resolution:
       integrity: sha1-OhBcoXBTr1XW4nDB+CiGguGNpAA=
+  /which/1.3.1:
+    dependencies:
+      isexe: 2.0.0
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha512-HxJdYWq1MTIQbJ3nw0cqssHoTNU267KlrDuGZ1WYlxDStUtKUhOaJmh112/TZmHxxUfuJqPXSOm7tDyas0OSIQ==
   /wide-align/1.1.3:
     dependencies:
       string-width: 2.1.1
@@ -1575,6 +1600,7 @@ specifiers:
   express: ^4.17.1
   express-handlebars: ^4.0.3
   express-session: ^1.17.1
+  fluent-ffmpeg: ^2.1.2
   handlebars: ^4.7.6
   socket.io: ^2.3.0
   socket.io-express-session: ^0.1.3

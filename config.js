@@ -3,5 +3,6 @@ module.exports = {
   "webexports":{
     "display_brand":"OpenRadio"
   },
-  "sendInterval": 1000
+  "chunkSize": 1024*3,
+  "sendInterval": 1000*256// 1024*3/12 = 256
 }

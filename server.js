@@ -2,7 +2,7 @@
 const express = require("express");
 const app = express();
 const path = require("path");
-const {MultiWritable} = require("./utils");
+const { MultiWritable } = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
@@ -56,26 +56,42 @@ app.get("/", (req, res) => {
     ...{ stations: output }
   });
 });
+var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
 app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
+    "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });
   let name = req.params.name;
-  console.log("Serving Stream "+name)
+  console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
     let rawStream = retrieveStream(
       playlists[name][Math.floor(Math.random() * playlists[name].length)]
     );
-    let outputStream = new MultiWritable();
-    rawStream.pipe(outputStream);
+
+    var command = ffmpeg();
+    let outputStream = new MultiWritable({highWaterMark: config.chunkSize});
+
+    var tp = ffmpeg(rawStream)
+      .withNoVideo()
+      .inputFormat("m4a")
+      .audioCodec("libmp3lame")
+      .audioBitrate(128)
+      .format("mp3")
+      .on("error", err => console.error(err))
+      .on("end", () => console.log("Finished!"))
+      .save(outputStream); // FFmpeg chain
+    //rawStream.pipe(outputStream);
     contentStreams[name] = outputStream;
   }
   contentStreams[name].consumers.push(res);
   req.on("close", function() {
-        contentStreams[name].consumers = contentStreams[name].consumers.filter(x => x!=res);
-    });
+    contentStreams[name].consumers = contentStreams[name].consumers.filter(
+      x => x != res
+    );
+  });
   //res.send(req.params.name);
 });
 // listen for requests :)
