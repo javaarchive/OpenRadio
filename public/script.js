@@ -1,10 +1,14 @@
-// client-side js, loaded by index.html
-// run by the browser each time the page is loaded
-
-console.log("hello empowered world");
-let dotsIter = 0;
-const dotsAnimation = [".","..","..."]
-setInterval(function(){
-  $(".dots-animate").html(dotsAnimation[dotsIter % dotsAnimation.length])
-  dotsIter = (dotsIter + 1) % dotsAnimation.length;
-},500)
+function controllerclick(event) {
+    console.log("Clicked");
+    console.log(event);
+  if(event.ctrlKey){
+    $("#streamelem").toggle();
+  }else{
+    
+  }
+  }
+$(function() {
+  $("#streamelem").hide();
+  let controller = document.getElementById("controller");
+  controller.addEventListener("click", controllerclick);
+});

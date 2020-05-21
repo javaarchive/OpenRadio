@@ -37,7 +37,7 @@ input {
 form button {
   background-color: #bbbbf2;
   border: 2px solid currentColor;
-  border-radius: .25em;
+  border-radius: 0.25em;
   cursor: pointer;
   font-size: inherit;
   line-height: 1.4em;
@@ -54,17 +54,30 @@ footer {
   padding-top: 1.5em;
   border-top: 1px solid lightgrey;
 }
-.codelist > li{
+.codelist > li {
   font-family: Consolas, Courier;
 }
-.white{
+.white {
   color: white;
   background: gray;
   margin: 0px;
   font-weight: lighter;
 }
-.spaced{
-  padding: 8px;4}
-.center { 
-            text-align-last: center; 
+.spaced {
+  padding: 8px;
+}
+.spaced-2x {
+  padding: 12px;
+}
+.center {
+  text-align-last: center;
+}
+.whitecolor {
+  color: white;
+}
+.station {
+  background-color: purple;
+}
+#streamelem{
+  width: 100%;
 }
