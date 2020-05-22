@@ -11,6 +11,7 @@ module.exports = {
   Shuffle: random songs are chosen doesn't prevent two songs from playing in a row
   MAKE SURE IT'S lowercase
   */
-  "bitrate": 16384 // Bitrate for sending chunks Formula: 1024*bitrate/8 = 128*bitrate in this case the bitrate is 128
+  "bitrate": 16384, // Bitrate for sending chunks Formula: 1024*bitrate/8 = 128*bitrate in this case the bitrate is 128
+  "databasefilename": "sqlite://playlists.db"
 }
 // Configure names here

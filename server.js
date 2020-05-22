@@ -6,6 +6,7 @@ const { MultiWritable } = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
+const Endb = require("endb");
 var { retrieveStream } = require("./contentHandler");
 app.engine(".html", exphbs({ extname: ".html" }));
 app.set("view engine", ".html");
@@ -39,18 +40,7 @@ const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
 app.use(express.static("public"));
 // Testing streams
-let playlists = {
-  test: [
-    // "https://www.youtube.com/watch?v=B9AUUhg0Cdw",
-    "https://www.youtube.com/watch?v=rUWxSEwctFU",
-    "https://www.youtube.com/watch?v=vzYYW8V3Ibc"
-  ],
-  Chill: [
-    "https://www.youtube.com/watch?v=jqkPqfOFmbY",
-    "https://www.youtube.com/watch?v=p-LOXXGGeAc",
-    "https://www.youtube.com/watch?v=Gc3tqnhmf5U"
-  ]
-};
+let playlists = new Endb(config.databasefilename);
 let contentStreams = {};
 let listenerCounts = {};
 function isAnyoneListening(name) {
@@ -79,16 +69,17 @@ app.get("/", (req, res) => {
 });
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
-function playContent(name, outputStream, realOutputStream, finish) {
+async function playContent(name, outputStream, realOutputStream, finish) {
   console.log("Playing playlist " + name);
-  let pos = Math.floor(Math.random() * playlists[name].length);
+  let playlist = await playlists.get(name);
+  let pos = Math.floor(Math.random() * playlist.length);
   if ((config.mode = "ordered" && !Object.keys(streamsPos).includes(name))) {
     streamsPos[name] = pos;
   } else {
     streamsPos[name] += 1;
     pos = streamsPos[name] % playlists[name].length;
   }
-  let rawStream = retrieveStream(playlists[name][pos]);
+  let rawStream = retrieveStream(playlist[pos]);
   rawStream.on("end", function() {
     //rawStream.unpipe(processer);
   });
@@ -115,6 +106,10 @@ const stream = require("stream");
 const { ThrottleGroup, Throttle } = require("stream-throttle");
 var tg = new ThrottleGroup({ rate: config.bitrate });
 app.get("/stream/:name", async function(req, res) {
+  if(!(await playlists.has(req.params.name))){
+    res.status(404);
+    res.send("There isn't a playlist with that name");
+  }
   res.set({
     "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
@@ -122,6 +117,7 @@ app.get("/stream/:name", async function(req, res) {
   });
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
+  
   if (!Object.keys(listenerCounts).includes(name)) {
     listenerCounts[name] = 0;
   }
