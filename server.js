@@ -116,7 +116,7 @@ function playContent(name, outputStream, realOutputStream) {
       playContent(name, outputStream, realOutputStream);
     }
   };
-  console.log(outputStream);
+  //console.log(outputStream);
   let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
     .withNoVideo()
     .inputFormat("m4a")
@@ -131,6 +131,8 @@ function playContent(name, outputStream, realOutputStream) {
     .stream(outputStream, { end: false }); // Don't close stream to keep continous play
 }
 const stream = require("stream");
+const {ThrottleGroup, Throttle} = require("stream-throttle");
+var tg = new ThrottleGroup({rate: config.bitrate});
 app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
@@ -145,7 +147,7 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = new MultiWritable({ highWaterMark: config.chunkSize });
+    let outputStream = tg.throttle();
     var pass = new stream.PassThrough();
     playContent(name, pass, outputStream);
     // FFmpeg chain
@@ -160,11 +162,9 @@ app.get("/stream/:name", async function(req, res) {
     //rawStream.pipe(outputStream);
     contentStreams[name] = outputStream;
   }
-  contentStreams[name].consumers.push(res);
+  contentStreams[name].pipe(res);
   req.on("close", function() {
-    contentStreams[name].consumers = contentStreams[name].consumers.filter(
-      x => x != res
-    );
+    contentStreams[name].unpipe(res);
     listenerCounts[name]--;
     if (listenerCounts[name] <= 0) {
       delete listenerCounts[name];
