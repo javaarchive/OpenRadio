@@ -7,6 +7,17 @@ class MultiWritable extends Writable {
     this.sendbuffer = [];
     this.started = false;
   }
+  thinkItIsDone(){
+    console.log("Blank empty buffer func called")
+    // Do nothing let user override
+  }
+  onExhaust(){
+    console.log("Blank Exhaust Called")
+    // Do nothing let user override
+  }
+  get empty(){
+    return this.sendbuffer.length == 0;
+  }
   sendChunks() {
     //console.log(this.sendbuffer);
     if (!this.sendbuffer) {
@@ -21,7 +32,7 @@ class MultiWritable extends Writable {
     //console.log(data + " " + this.sendbuffer.length);
     if (data) {
       // Chunks in Queue!!!
-      console.log("We have chunks " + Object.keys(data));
+      //console.log("We have chunks " + Object.keys(data));
       let { chunk, encoding, callback } = data;
       for (var i = 0; i < total; i++) {
         this.consumers[i].write(chunk, encoding, function() {
@@ -31,9 +42,11 @@ class MultiWritable extends Writable {
           }
         });
       }
+    }else{
+      this.thinkItIsDone();
     }
   }
-  _write(chunk, encoding, callback) {
+  write(chunk, encoding, callback) {
     if (!this.started) {
       this.started = true;
       var scope = this;

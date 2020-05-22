@@ -3,7 +3,7 @@ module.exports = {
   "webexports":{
     "display_brand":"OpenRadio"
   },
-  "chunkSize": 1024 * 1024 * 10,
-  "inputChunkSize": 1024*1024*1,
+  "chunkSize": 1024,
+  "inputChunkSize": 1024,
   "sendInterval": 50 //*8// 1024*3/12 = 256
 }

@@ -39,7 +39,11 @@ const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
 app.use(express.static("public"));
 // Testing streams
-let playlists = { test: ["https://www.youtube.com/watch?v=Gc3tqnhmf5U"] };
+let playlists = {
+  test: [ // "https://www.youtube.com/watch?v=B9AUUhg0Cdw",
+    "https://www.youtube.com/watch?v=rUWxSEwctFU"
+  ]
+};
 let contentStreams = {};
 let streams = Object.keys(playlists);
 console.log("Init Handlers");
@@ -58,32 +62,67 @@ app.get("/", (req, res) => {
 });
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
+function playContent(name, outputStream, realOutputStream) {
+  console.log("Playing playlist "+name);
+  let rawStream = retrieveStream(
+    playlists[name][Math.floor(Math.random() * playlists[name].length)]
+  );
+  let consumed = false;
+  realOutputStream.thinkItIsDone = function() {
+    console.log("It might be done");
+    if (consumed) {
+      console.log("IT is!");
+      playContent(name, outputStream, realOutputStream);
+    }
+  };
+  //console.log(realOutputStream.writable);
+  realOutputStream.onExhaust = function() {
+    consumed = true;
+    //console.log("Count "+realOutputStream.sendBuffer.length)
+    console.log("Checking if buffer empty "+realOutputStream.empty);
+    if (realOutputStream.empty) {
+      console.log("Recursive Play")
+      
+      playContent(name, outputStream, realOutputStream);
+    }
+  };
+  console.log(outputStream);
+  let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
+    .withNoVideo()
+    .inputFormat("m4a")
+    .audioCodec("libmp3lame")
+    .audioBitrate(128)
+    .format("mp3")
+    .on("error", err => console.error(err))
+    .on("end", function() {
+      //console.warn("Unexpected end")
+      consumed = true; /*this.unpipe(outputStream)*/
+    }) //, { end: false }
+    .stream(outputStream, {end: false}); // Don't close stream to keep continous play
+}
+const stream = require("stream");
 app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });
-  res.set('Cache-Control', 'no-store')
+  res.set("Cache-Control", "no-store");
   let name = req.params.name;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let rawStream = retrieveStream(
-      playlists[name][Math.floor(Math.random() * playlists[name].length)]
+    let outputStream = new MultiWritable({ highWaterMark: config.chunkSize });
+    var pass = new stream.PassThrough();
+    playContent(name, pass, outputStream);
+    // FFmpeg chain
+    pass.on("end", function() {
+      console.warn("END!");
+      outputStream.onExhaust();
+    });
+    pass.pipe(
+      outputStream,
+      { end: false }
     );
-
-    var command = ffmpeg();
-    let outputStream = new MultiWritable({highWaterMark: config.chunkSize});
-
-    var tp = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
-      .withNoVideo()
-      .inputFormat("m4a")
-      .audioCodec("libmp3lame")
-      .audioBitrate(128)
-      .format("mp3")
-      .on("error", err => console.error(err))
-      .on("end", () => console.log("Finished!"))
-      .save(outputStream); // FFmpeg chain
     //rawStream.pipe(outputStream);
     contentStreams[name] = outputStream;
   }

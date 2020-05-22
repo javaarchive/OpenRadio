@@ -9,7 +9,7 @@ function retrieveStream(identifier) {
     identifier.startsWith("http://www.youtube.com")
   ) {
     //return ytdl(identifier, { filter: 'audioonly'});
-    return ytdl(identifier, { filter: format => format.container === "mp4", highWaterMark: config.inputChunkSize});
+    return ytdl(identifier, { filter: format => format.container === "mp4", highWaterMark: config.inputChunkSize, end: false}); // End: false required to prevent closing
   }
 }
 module.exports = { retrieveStream: retrieveStream };
