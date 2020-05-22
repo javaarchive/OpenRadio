@@ -39,7 +39,7 @@ const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
 app.use(express.static("public"));
 // Testing streams
-let playlists = { test: ["https://www.youtube.com/watch?v=oJuGlqO85YI"] };
+let playlists = { test: ["https://www.youtube.com/watch?v=Gc3tqnhmf5U"] };
 let contentStreams = {};
 let streams = Object.keys(playlists);
 console.log("Init Handlers");
@@ -64,6 +64,7 @@ app.get("/stream/:name", async function(req, res) {
     "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });
+  res.set('Cache-Control', 'no-store')
   let name = req.params.name;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {

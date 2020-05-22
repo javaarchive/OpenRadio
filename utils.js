@@ -20,7 +20,7 @@ class MultiWritable extends Writable {
     //console.log("Checking for chunks!")
     console.log(data + " " + this.sendbuffer.length);
     if (data) {
-      console.log("We have chunks "+Object.keys(data));
+      console.log("We have chunks " + Object.keys(data));
       let { chunk, encoding, callback } = data;
       for (var i = 0; i < total; i++) {
         this.consumers[i].write(chunk, encoding, function() {
