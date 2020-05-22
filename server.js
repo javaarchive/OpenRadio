@@ -62,6 +62,7 @@ function isAnyoneListening(name) {
   return false;
 }
 let streams = Object.keys(playlists);
+let streamsPos = {};
 console.log("Init Handlers");
 app.get("/", (req, res) => {
   let output = "";
@@ -78,44 +79,21 @@ app.get("/", (req, res) => {
 });
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
-function playContent(name, outputStream, realOutputStream) {
+function playContent(name, outputStream, realOutputStream, finish) {
   console.log("Playing playlist " + name);
-  let rawStream = retrieveStream(
-    playlists[name][Math.floor(Math.random() * playlists[name].length)]
-  );
+  let pos = Math.floor(Math.random() * playlists[name].length);
+  if ((config.mode = "ordered" && !Object.keys(streamsPos).includes(name))) {
+    streamsPos[name] = pos;
+  } else {
+    streamsPos[name] += 1;
+    pos = streamsPos[name] % playlists[name].length;
+  }
+  let rawStream = retrieveStream(playlists[name][pos]);
+  rawStream.on("end", function() {
+    //rawStream.unpipe(processer);
+  });
   let consumed = false;
-  realOutputStream.thinkItIsDone = function() {
-    console.log("It might be done");
-    if (consumed) {
-      console.log("IT is!");
-      if (!isAnyoneListening(name)) {
-        console.log("Nobody is listening :( goodbye");
-        console.log(realOutputStream);
-        realOutputStream.end();
-        delete contentStreams[name];
-        //outputStream.close();
-        return;
-      }
-      playContent(name, outputStream, realOutputStream);
-    }
-  };
-  //console.log(realOutputStream.writable);
-  realOutputStream.onExhaust = function() {
-    consumed = true;
-    //console.log("Count "+realOutputStream.sendBuffer.length)
-    console.log("Checking if buffer empty " + realOutputStream.empty);
-    if (realOutputStream.empty) {
-      console.log("Recursive Play");
-      if (!isAnyoneListening(name)) {
-        console.log("Nobody is listening :( goodbye");
-        //outputStream.close();
-        realOutputStream.end();
-        delete contentStreams[name];
-        return;
-      }
-      playContent(name, outputStream, realOutputStream);
-    }
-  };
+
   //console.log(outputStream);
   let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
     .withNoVideo()
@@ -127,12 +105,15 @@ function playContent(name, outputStream, realOutputStream) {
     .on("end", function() {
       //console.warn("Unexpected end")
       consumed = true; /*this.unpipe(outputStream)*/
+      playContent(name, outputStream, outputStream);
     }) //, { end: false }
+
+    /// , { end: false }
     .stream(outputStream, { end: false }); // Don't close stream to keep continous play
 }
 const stream = require("stream");
-const {ThrottleGroup, Throttle} = require("stream-throttle");
-var tg = new ThrottleGroup({rate: config.bitrate});
+const { ThrottleGroup, Throttle } = require("stream-throttle");
+var tg = new ThrottleGroup({ rate: config.bitrate });
 app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
@@ -148,21 +129,39 @@ app.get("/stream/:name", async function(req, res) {
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
     let outputStream = tg.throttle();
-    var pass = new stream.PassThrough();
-    playContent(name, pass, outputStream);
+    //var pass = new stream.PassThrough();
+    playContent(name, outputStream, outputStream, function() {
+      playContent(name, outputStream, outputStream);
+    });
     // FFmpeg chain
+    /*
     pass.on("end", function() {
       console.warn("END!");
-      outputStream.onExhaust();
+      // outputStream.onExhaust();
     });
     pass.pipe(
       outputStream,
+    //  { end: false }
+    );
+    */
+    //rawStream.pipe(outputStream);
+    var pass = new stream.PassThrough({ end: false });
+    outputStream.pipe(
+      pass,
       { end: false }
     );
-    //rawStream.pipe(outputStream);
-    contentStreams[name] = outputStream;
+    contentStreams[name] = pass;
+    pass.on("end", function() {
+      //console.warn("PASS ENDED");
+    });
+    outputStream.on("end", function() {
+      console.log("End of rate-limited stream");
+    });
   }
-  contentStreams[name].pipe(res);
+  contentStreams[name].pipe(
+    res,
+    { end: false }
+  );
   req.on("close", function() {
     contentStreams[name].unpipe(res);
     listenerCounts[name]--;
