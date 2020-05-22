@@ -16,7 +16,9 @@ function play(dest, elem){
   let audioelem = document.getElementById("streamelem");
   audioelem.src = dest;
   audioelem.play();
-  let name = elem.parentElement.children[0].innerText;
+  //console.log(elem);
+  //console.log(elem.parentElement.children[0]);
+  let name = elem.parentElement.innerText;
   $("#station-name-display").text(name);
   console.log("Station Name is "+name);
 }

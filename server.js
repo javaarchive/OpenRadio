@@ -45,7 +45,7 @@ let playlists = {
     "https://www.youtube.com/watch?v=rUWxSEwctFU",
     "https://www.youtube.com/watch?v=vzYYW8V3Ibc"
   ],
-  Chill:[
+  Chill: [
     "https://www.youtube.com/watch?v=jqkPqfOFmbY",
     "https://www.youtube.com/watch?v=p-LOXXGGeAc",
     "https://www.youtube.com/watch?v=Gc3tqnhmf5U"
