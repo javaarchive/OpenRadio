@@ -40,11 +40,27 @@ var template = Handlebars.compile(stationtemplate);
 app.use(express.static("public"));
 // Testing streams
 let playlists = {
-  test: [ // "https://www.youtube.com/watch?v=B9AUUhg0Cdw",
-    "https://www.youtube.com/watch?v=rUWxSEwctFU"
+  test: [
+    // "https://www.youtube.com/watch?v=B9AUUhg0Cdw",
+    "https://www.youtube.com/watch?v=rUWxSEwctFU",
+    "https://www.youtube.com/watch?v=vzYYW8V3Ibc"
+  ],
+  Chill:[
+    "https://www.youtube.com/watch?v=jqkPqfOFmbY",
+    "https://www.youtube.com/watch?v=p-LOXXGGeAc",
+    "https://www.youtube.com/watch?v=Gc3tqnhmf5U"
   ]
 };
 let contentStreams = {};
+let listenerCounts = {};
+function isAnyoneListening(name) {
+  if (Object.keys(listenerCounts).includes(name)) {
+    if (listenerCounts[name] > 0) {
+      return true;
+    }
+  }
+  return false;
+}
 let streams = Object.keys(playlists);
 console.log("Init Handlers");
 app.get("/", (req, res) => {
@@ -63,7 +79,7 @@ app.get("/", (req, res) => {
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
 function playContent(name, outputStream, realOutputStream) {
-  console.log("Playing playlist "+name);
+  console.log("Playing playlist " + name);
   let rawStream = retrieveStream(
     playlists[name][Math.floor(Math.random() * playlists[name].length)]
   );
@@ -72,6 +88,14 @@ function playContent(name, outputStream, realOutputStream) {
     console.log("It might be done");
     if (consumed) {
       console.log("IT is!");
+      if (!isAnyoneListening(name)) {
+        console.log("Nobody is listening :( goodbye");
+        console.log(realOutputStream);
+        realOutputStream.end();
+        delete contentStreams[name];
+        //outputStream.close();
+        return;
+      }
       playContent(name, outputStream, realOutputStream);
     }
   };
@@ -79,10 +103,16 @@ function playContent(name, outputStream, realOutputStream) {
   realOutputStream.onExhaust = function() {
     consumed = true;
     //console.log("Count "+realOutputStream.sendBuffer.length)
-    console.log("Checking if buffer empty "+realOutputStream.empty);
+    console.log("Checking if buffer empty " + realOutputStream.empty);
     if (realOutputStream.empty) {
-      console.log("Recursive Play")
-      
+      console.log("Recursive Play");
+      if (!isAnyoneListening(name)) {
+        console.log("Nobody is listening :( goodbye");
+        //outputStream.close();
+        realOutputStream.end();
+        delete contentStreams[name];
+        return;
+      }
       playContent(name, outputStream, realOutputStream);
     }
   };
@@ -98,7 +128,7 @@ function playContent(name, outputStream, realOutputStream) {
       //console.warn("Unexpected end")
       consumed = true; /*this.unpipe(outputStream)*/
     }) //, { end: false }
-    .stream(outputStream, {end: false}); // Don't close stream to keep continous play
+    .stream(outputStream, { end: false }); // Don't close stream to keep continous play
 }
 const stream = require("stream");
 app.get("/stream/:name", async function(req, res) {
@@ -107,8 +137,12 @@ app.get("/stream/:name", async function(req, res) {
     "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
+  if (!Object.keys(listenerCounts).includes(name)) {
+    listenerCounts[name] = 0;
+  }
+  listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
     let outputStream = new MultiWritable({ highWaterMark: config.chunkSize });
@@ -131,6 +165,10 @@ app.get("/stream/:name", async function(req, res) {
     contentStreams[name].consumers = contentStreams[name].consumers.filter(
       x => x != res
     );
+    listenerCounts[name]--;
+    if (listenerCounts[name] <= 0) {
+      delete listenerCounts[name];
+    }
   });
   //res.send(req.params.name);
 });
@@ -138,3 +176,4 @@ app.get("/stream/:name", async function(req, res) {
 const listener = http.listen(process.env.PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
+//setInterval(function(){console.log(listenerCounts)},2500);

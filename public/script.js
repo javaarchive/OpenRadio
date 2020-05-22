@@ -12,3 +12,11 @@ $(function() {
   let controller = document.getElementById("controller");
   controller.addEventListener("click", controllerclick);
 });
+function play(dest, elem){
+  let audioelem = document.getElementById("streamelem");
+  audioelem.src = dest;
+  audioelem.play();
+  let name = elem.parentElement.children[0].innerText;
+  $("#station-name-display").text(name);
+  console.log("Station Name is "+name);
+}

@@ -7,3 +7,4 @@ module.exports = {
   "inputChunkSize": 1024,
   "sendInterval": 50 //*8// 1024*3/12 = 256
 }
+// Configure names here
