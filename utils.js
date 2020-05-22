@@ -18,8 +18,9 @@ class MultiWritable extends Writable {
     let count = 0;
     let total = this.consumers.length;
     //console.log("Checking for chunks!")
-    console.log(data + " " + this.sendbuffer.length);
+    //console.log(data + " " + this.sendbuffer.length);
     if (data) {
+      // Chunks in Queue!!!
       console.log("We have chunks " + Object.keys(data));
       let { chunk, encoding, callback } = data;
       for (var i = 0; i < total; i++) {
@@ -32,10 +33,11 @@ class MultiWritable extends Writable {
       }
     }
   }
-  write(chunk, encoding, callback) {
+  _write(chunk, encoding, callback) {
     if (!this.started) {
       this.started = true;
       var scope = this;
+      //console.log(chunk.length);
       setInterval(function() {
         scope.sendChunks();
       }, sendInterval);
@@ -46,7 +48,7 @@ class MultiWritable extends Writable {
       callback: callback
     });
     //console.log(this.sendbuffer);
-    console.log("Queued Chunk " + this.sendbuffer.length);
+    console.log("Queued Chunk " + this.sendbuffer.length+" chunk len "+chunk.length);
   }
 }
 module.exports = { MultiWritable: MultiWritable };

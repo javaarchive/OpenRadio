@@ -75,7 +75,7 @@ app.get("/stream/:name", async function(req, res) {
     var command = ffmpeg();
     let outputStream = new MultiWritable({highWaterMark: config.chunkSize});
 
-    var tp = ffmpeg(rawStream)
+    var tp = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
       .withNoVideo()
       .inputFormat("m4a")
       .audioCodec("libmp3lame")
