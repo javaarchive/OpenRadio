@@ -96,7 +96,8 @@ app.get("/playlist_editor/:name", async function(req, res) {
           output +
           admin_playlist_item_template({
             name: playlist[i].name,
-            count: playlist[i].source
+            count: playlist[i].source,
+            pos: i.toString()
           });
       }
       res.render(__dirname + "/views/playlist_editor.html", {
@@ -119,7 +120,17 @@ app.post("/playlist_editor/:name", async function(req, res) {
     }
     if (await playlists.has(name)) {
       let playlist = await playlists.get(name);
-      playlist.push({ name: req.body.item_name, source: req.body.item_source });
+      if (!req.body.new_item_pos || req.body.new_item_pos == "") {
+        playlist.push({
+          name: req.body.item_name,
+          source: req.body.item_source
+        });
+      } else {
+        playlist.splice(req.body.new_item_pos, 0, {
+          name: req.body.item_name,
+          source: req.body.item_source
+        });
+      }
       await playlists.set(name, playlist);
       res.redirect("/playlist_editor/" + name);
     } else {
@@ -151,8 +162,33 @@ app.get("/edit_playlists", async function(req, res) {
 });
 app.post("/edit_playlists", async function(req, res) {
   if (req.session.logintime) {
-    playlists.set(req.body.playlist_name, []);
+    await playlists.set(req.body.playlist_name, []);
     res.redirect("/edit_playlists");
+  } else {
+    res.send("Please log in");
+  }
+  res.redirect("/edit_playlists");
+});
+app.post("/delete_playlist_item/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (name && (await playlists.has(name))) {
+      let playlist = await playlists.get(name);
+      if (req.body.delete_item_pos) {
+        let pos = req.body.delete_item_pos;
+        if (pos < playlist.length) {
+          playlist.splice(pos, 1);
+          await playlists.set(name, playlist);
+          res.redirect("/playlist_editor/" + name);
+        } else {
+          res.send("Invalid Position");
+        }
+      } else {
+        res.send("Specify a item index");
+      }
+    } else {
+      res.send("Invalid Playlist Name");
+    }
   } else {
     res.send("Please log in");
   }
@@ -163,12 +199,29 @@ app.get("/delete_playlist/:name", async function(req, res) {
     let name = req.params.name;
     if (name) {
       if (await playlists.has(name)) {
-        res.render(__dirname + "/views/playlists_delete_confirm.html", {
+        res.render(__dirname + "/views/playlist_delete_confirm.html", {
           ...config.webexports,
           ...{ playlist_name: name }
         });
       } else {
-        console.log("Playlist doesn't exist");
+        res.send("Playlist doesn't exist");
+      }
+    } else {
+      res.send("Provide a name");
+    }
+  } else {
+    res.send("Please log in");
+  }
+});
+app.post("/delete_playlist/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (name) {
+      if (await playlists.has(name)) {
+        await playlists.delete(name);
+        res.redirect("/edit_playlists");
+      } else {
+        res.send("Playlist doesn't exist");
       }
     } else {
       res.send("Provide a name");

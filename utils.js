@@ -1,6 +1,6 @@
 const Writable = require("stream").Writable;
 const { sendInterval } = require("./config");
-// Deprecated! Inefficent
+// Deprecated! Inefficent and laggy
 class MultiWritable extends Writable {
   constructor(options) {
     super(options);

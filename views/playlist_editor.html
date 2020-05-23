@@ -1,8 +1,14 @@
+<script src="/playlisteditor.js"></script>
 <div class="container">
   <h1>
     Editing playlist {{playlist_name}}
   </h1>
-  <a href="/edit_playlists/{{playlist_name}}">back</a>
+  <a href="/edit_playlists/{{playlist_name}}" class="btn btn-success"
+    >Go Back</a
+  >
+  <a href="/delete_playlist/{{playlist_name}}" class="btn btn-warning"
+    >Delete Playlist</a
+  >
   <div class="list-group">
     {{{playlist_items}}}
   </div>
@@ -18,8 +24,17 @@
       name="item_source"
       placeholder="Item source. Usually the url"
     />
+    Optional Position: <input type="number" id="add-number" name="new_item_pos" />
     <button class="btn btn-success" type="submit">
       Add item to {{playlist_name}}
     </button>
   </form>
+  <form id="playlist-item-delete-form" method="POST" action="/delete_playlist_item/{{playlist_name}}">
+    <input type="number" hidden id="del-number" name="delete_item_pos" />
+  </form>
+  <p>
+    If another administrator edits the playlist and you delete an item the wrong
+    item may be deleted. So please do not delete an item a long period after the
+    page has loaded.
+  </p>
 </div>
