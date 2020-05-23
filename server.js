@@ -158,6 +158,25 @@ app.post("/edit_playlists", async function(req, res) {
   }
   res.redirect("/edit_playlists");
 });
+app.get("/delete_playlist/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (name) {
+      if (await playlists.has(name)) {
+        res.render(__dirname + "/views/playlists_delete_confirm.html", {
+          ...config.webexports,
+          ...{ playlist_name: name }
+        });
+      } else {
+        console.log("Playlist doesn't exist");
+      }
+    } else {
+      res.send("Provide a name");
+    }
+  } else {
+    res.send("Please log in");
+  }
+});
 app.get("/", async (req, res) => {
   let streams = await playlists.keys();
   let output = "";
