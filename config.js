@@ -12,6 +12,7 @@ module.exports = {
   MAKE SURE IT'S lowercase
   */
   "bitrate": 16384, // Bitrate for sending chunks Formula: 1024*bitrate/8 = 128*bitrate in this case the bitrate is 128
-  "databasefilename": "sqlite://playlists.db"
+  "databasefilename": "sqlite://playlists.db",
+  "authurl":"/admin"
 }
 // Configure names here

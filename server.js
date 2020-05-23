@@ -35,9 +35,21 @@ var stationtemplate = fs.readFileSync(
   __dirname + "/views/station.html",
   "utf8"
 );
+var adminplaylisttemplate = fs.readFileSync(
+  __dirname + "/views/admin_playlist.html",
+  "utf8"
+);
+var adminplaylistitemtemplate = fs.readFileSync(
+  __dirname + "/views/admin_playlist_item.html",
+  "utf8"
+);
 console.log(stationtemplate);
 const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
+var admin_playlist_template = Handlebars.compile(adminplaylisttemplate);
+var admin_playlist_item_template = Handlebars.compile(
+  adminplaylistitemtemplate
+);
 app.use(express.static("public"));
 // Testing streams
 let playlists = new Endb(config.databasefilename);
@@ -51,10 +63,103 @@ function isAnyoneListening(name) {
   }
   return false;
 }
-let streams = Object.keys(playlists);
+
 let streamsPos = {};
 console.log("Init Handlers");
-app.get("/", (req, res) => {
+app.get(config.authurl, function(req, res) {
+  if (req.session.logintime) {
+    res.render(__dirname + "/views/adminpanel.html", config.webexports);
+  } else {
+    res.render(__dirname + "/views/auth.html", config.webexports);
+  }
+});
+app.get("/logout", function(req, res) {
+  req.session.destroy();
+  res.redirect(config.authurl);
+});
+app.post(config.authurl, function(req, res) {
+  if (req.body.password == process.env.PASSWORD) {
+    req.session.logintime = Date.now();
+    res.render(__dirname + "/views/adminpanel.html", config.webexports);
+  } else {
+    res.send("Incorrect Password. Try again. ");
+  }
+});
+app.get("/playlist_editor/:name", async function(req, res) {
+  let name = req.params.name;
+  if (req.session.logintime) {
+    if (await playlists.has(name)) {
+      let playlist = await playlists.get(name);
+      let output = "";
+      for (var i = 0; i < playlist.length; i++) {
+        output =
+          output +
+          admin_playlist_item_template({
+            name: playlist[i].name,
+            count: playlist[i].source
+          });
+      }
+      res.render(__dirname + "/views/playlist_editor.html", {
+        ...config.webexports,
+        ...{ playlist_items: output, playlist_name: name }
+      });
+    } else {
+      req.send("Not a playlist");
+    }
+  } else {
+    req.send("Please log in");
+  }
+});
+app.post("/playlist_editor/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (!name) {
+      res.send("No playlist name specified");
+      return;
+    }
+    if (await playlists.has(name)) {
+      let playlist = await playlists.get(name);
+      playlist.push({ name: req.body.item_name, source: req.body.item_source });
+      await playlists.set(name, playlist);
+      res.redirect("/playlist_editor/" + name);
+    } else {
+      res.send("Playlist doesn't exist");
+    }
+  } else {
+    res.send("Please log in");
+  }
+});
+app.get("/edit_playlists", async function(req, res) {
+  if (req.session.logintime) {
+    let output = "";
+    let all_playlists = await playlists.all();
+    for (var i = 0; i < all_playlists.length; i++) {
+      output =
+        output +
+        admin_playlist_template({
+          name: all_playlists[i]["key"],
+          count: all_playlists[i]["value"].length
+        });
+    }
+    res.render(__dirname + "/views/playlists_admin.html", {
+      ...config.webexports,
+      ...{ playlists: output }
+    });
+  } else {
+    res.send("Please log in");
+  }
+});
+app.post("/edit_playlists", async function(req, res) {
+  if (req.session.logintime) {
+    playlists.set(req.body.playlist_name, []);
+    res.redirect("/edit_playlists");
+  } else {
+    res.send("Please log in");
+  }
+  res.redirect("/edit_playlists");
+});
+app.get("/", async (req, res) => {
+  let streams = await playlists.keys();
   let output = "";
   for (var i = 0; i < streams.length; i++) {
     output =
@@ -77,9 +182,9 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     streamsPos[name] = pos;
   } else {
     streamsPos[name] += 1;
-    pos = streamsPos[name] % playlists[name].length;
+    pos = streamsPos[name] % playlist.length;
   }
-  let rawStream = retrieveStream(playlist[pos]);
+  let rawStream = retrieveStream(playlist[pos]["source"]);
   rawStream.on("end", function() {
     //rawStream.unpipe(processer);
   });
@@ -106,9 +211,10 @@ const stream = require("stream");
 const { ThrottleGroup, Throttle } = require("stream-throttle");
 var tg = new ThrottleGroup({ rate: config.bitrate });
 app.get("/stream/:name", async function(req, res) {
-  if(!(await playlists.has(req.params.name))){
+  if (!(await playlists.has(req.params.name))) {
     res.status(404);
     res.send("There isn't a playlist with that name");
+    return;
   }
   res.set({
     "Content-Type": "audio/mpeg3",
@@ -117,7 +223,7 @@ app.get("/stream/:name", async function(req, res) {
   });
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
-  
+
   if (!Object.keys(listenerCounts).includes(name)) {
     listenerCounts[name] = 0;
   }

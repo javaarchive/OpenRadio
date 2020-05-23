@@ -1,0 +1,25 @@
+<div class="container">
+  <h1>
+    Editing playlist {{playlist_name}}
+  </h1>
+  <a href="/edit_playlists/{{playlist_name}}">back</a>
+  <div class="list-group">
+    {{{playlist_items}}}
+  </div>
+  <form method="POST">
+    Add new item to playlist. Duplicates are allowed!
+    <input
+      class="form-control"
+      name="item_name"
+      placeholder="A name for the item"
+    />
+    <input
+      class="form-control"
+      name="item_source"
+      placeholder="Item source. Usually the url"
+    />
+    <button class="btn btn-success" type="submit">
+      Add item to {{playlist_name}}
+    </button>
+  </form>
+</div>
