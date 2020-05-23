@@ -7,7 +7,7 @@
   "description": "A simple Node app built on Express, instantly up and running.",
   "main": "server.js",
   "scripts": {
-    "start": "browserify public/script.js -o public/final.js; node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.17.1",
@@ -26,8 +26,8 @@
     "sqlite3": "^4.2.0",
     "better-sqlite3": "^7.0.1",
     "butterchurn": "^2.6.7",
-    "butterchurn-presets": "^2.4.7",
-    "browserify": "^16.5.1"
+    "butterchurn-presets": "^2.4.7"
+
   },
   "engines": {
     "node": "10.x"

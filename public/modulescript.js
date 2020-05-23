@@ -1,40 +1,21 @@
-function controllerclick(event) {
-  console.log("Clicked");
-  console.log(event);
-  if (event.ctrlKey) {
-    $("#streamelem").toggle();
-  } else {
-  }
-}
-$(function() {
-  $("#streamelem").hide();
-  let controller = document.getElementById("controller");
-  controller.addEventListener("click", controllerclick);
-  document.body.onkeyup = KeyPress;
-});
-function play(dest, elem) {
-  let audioelem = document.getElementById("streamelem");
-  audioelem.src = dest;
-  audioelem.play();
-  //console.log(elem);
-  //console.log(elem.parentElement.children[0]);
-  let name = elem.parentElement.innerText;
-  $("#station-name-display").text(name);
-  console.log("Station Name is " + name);
-}
-// ButterChun
+
+// ButterChurn
+// My failed attempt
+
 function enableButterchurn() {
   let audioContext = new AudioContext();
   let canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   let audio = document.getElementById("streamelem");
-  const analyserNode = new AnalyserNode(audioContext, {
+  const gainNode = new AnalyserNode(audioContext, {
     fftSize: 2048,
     smoothingTimeConstant: 0.5
-  });
+  })
+  //let gainNode = audioContext.createGain();
   var src = audioContext.createMediaElementSource(audio);
-  src.connect(analyserNode);
-  console.log(butterchurn.default);
+  gainNode.connect(audioContext.destination);
+  src.connect(gainNode);
+  //console.log(butterchurn.default);
   const visualizer = butterchurn.default.createVisualizer(
     audioContext,
     canvas,
@@ -43,10 +24,10 @@ function enableButterchurn() {
       height: 600
     }
   );
-
+console.log("No errors I guess");
   // get audioNode from audio source or microphone
 
-  visualizer.connectAudio(anaylserNode);
+  visualizer.connectAudio(src);
 
   // load a preset
 
@@ -85,3 +66,4 @@ function KeyPress(e) {
   } else {
   }
 }
+window.KeyPress = KeyPress;
