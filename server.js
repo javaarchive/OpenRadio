@@ -261,7 +261,10 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     //rawStream.unpipe(processer);
   });
   let consumed = false;
-
+  function replay() {
+    if(!isAnyoneListening(name)){return;}
+    playContent(name, outputStream, outputStream, replay);
+  }
   //console.log(outputStream);
   let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
     .withNoVideo()
@@ -273,7 +276,7 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     .on("end", function() {
       //console.warn("Unexpected end")
       consumed = true; /*this.unpipe(outputStream)*/
-      playContent(name, outputStream, outputStream);
+      replay();
     }) //, { end: false }
 
     /// , { end: false }
@@ -299,14 +302,17 @@ app.get("/stream/:name", async function(req, res) {
   if (!Object.keys(listenerCounts).includes(name)) {
     listenerCounts[name] = 0;
   }
+
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
     let outputStream = tg.throttle();
+    function replay() {
+      if(!isAnyoneListening(name)){return;}
+      playContent(name, outputStream, outputStream, replay);
+    }
     //var pass = new stream.PassThrough();
-    playContent(name, outputStream, outputStream, function() {
-      playContent(name, outputStream, outputStream);
-    });
+    playContent(name, outputStream, outputStream, replay);
     // FFmpeg chain
     /*
     pass.on("end", function() {
