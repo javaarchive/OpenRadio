@@ -1,13 +1,14 @@
 <script src="https://cdn.jsdelivr.net/npm/butterchurn@2.6.7/lib/butterchurn.min.js" type="module"></script>
 <script src="https://cdn.jsdelivr.net/npm/butterchurn-presets@2.4.7/lib/butterchurnPresets.min.js"></script>
  <script src="/modulescript.js" type="module"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="/openradio.js"></script>
 <div class="container">
   {{{stations}}}
   <audio id="streamelem" src="/stream/test" controls autoplay preload="auto"></audio>
 </div>
 <div class="fixed-bottom">
-  <h4 class="white spaced">
+  <h4 class="white spaced" id="item-name-display">
     Song Indicator Coming Soon
   </h4>
   <div class="white center justify-content-center" id="controller">

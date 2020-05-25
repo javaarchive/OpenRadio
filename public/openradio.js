@@ -1,3 +1,9 @@
+const socket = io();
+var curItem = "Unknown";
+socket.on("itemchange", function(data){
+  curItem = data.item;
+  $("#item-name-display").text(curItem);
+})
 function controllerclick(event) {
   console.log("Clicked");
   console.log(event);
@@ -19,6 +25,8 @@ function play(dest, elem) {
   //console.log(elem);
   //console.log(elem.parentElement.children[0]);
   let name = elem.parentElement.innerText;
+  socket.emit("movetoplaylist",{name: name});
+  socket.emit("getcurrentitem",{});
   $("#station-name-display").text(name);
   console.log("Station Name is " + name);
 }

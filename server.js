@@ -244,6 +244,30 @@ app.get("/", async (req, res) => {
     ...{ stations: output }
   });
 });
+var idtoplaylist = [];
+io.on("connection", function(socket) {
+  idtoplaylist[socket.id] = "";
+  socket.on("movetoplaylist", function(data) {
+    try {
+      let socketsRooms = io.sockets.manager.roomClients[socket.id];
+      for (var i = 0; i < socketsRooms.length; i++) {
+        socket.leave(socketsRooms[i]);
+      }
+    } catch (ex) {}
+    socket.join(data.name);
+  });
+  socket.on("getcurrentitem", function(data) {
+    try {
+      socket.emit("itemchange", {
+        name: playlistToName[idtoplaylist[socket.id]]
+      });
+    } catch (ex) {}
+  });
+  socket.on("disconnect", function() {
+    delete idtoplaylist[socket.id];
+  });
+});
+var playlistToName = {};
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
 async function playContent(name, outputStream, realOutputStream, finish) {
@@ -257,12 +281,16 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     pos = streamsPos[name] % playlist.length;
   }
   let rawStream = retrieveStream(playlist[pos]["source"]);
-  rawStream.on("end", function() {
+  playlistToName[name] = playlist[pos]["name"];
+  io.to(name).emit("itemchange", { name: name, item: playlist[pos]["name"] });
+  /*rawStream.on("end", function() {
     //rawStream.unpipe(processer);
-  });
+  });*/
   let consumed = false;
   function replay() {
-    if(!isAnyoneListening(name)){return;}
+    if (!isAnyoneListening(name)) {
+      return;
+    }
     playContent(name, outputStream, outputStream, replay);
   }
   //console.log(outputStream);
@@ -272,15 +300,17 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     .audioCodec("libmp3lame")
     .audioBitrate(128)
     .format("mp3")
-    .on("error", err => console.error(err))
+    //.on("error", err => console.error(err))
     .on("end", function() {
       //console.warn("Unexpected end")
       consumed = true; /*this.unpipe(outputStream)*/
+      processer = null;
       replay();
-    }) //, { end: false }
-
-    /// , { end: false }
-    .stream(outputStream, { end: false }); // Don't close stream to keep continous play
+    }) // For some reason we keep getting too much error listeners
+    .stream(outputStream, { end: false })
+    .removeAllListeners("error"); // Don't close stream to keep continous play
+  console.log("end: " + processer.listenerCount("end"));
+  console.log("error: " + processer.listenerCount("error"));
 }
 const stream = require("stream");
 const { ThrottleGroup, Throttle } = require("stream-throttle");
@@ -308,7 +338,9 @@ app.get("/stream/:name", async function(req, res) {
   if (!Object.keys(contentStreams).includes(name)) {
     let outputStream = tg.throttle();
     function replay() {
-      if(!isAnyoneListening(name)){return;}
+      if (!isAnyoneListening(name)) {
+        return;
+      }
       playContent(name, outputStream, outputStream, replay);
     }
     //var pass = new stream.PassThrough();
@@ -330,6 +362,7 @@ app.get("/stream/:name", async function(req, res) {
       pass,
       { end: false }
     );
+
     contentStreams[name] = pass;
     pass.on("end", function() {
       //console.warn("PASS ENDED");
@@ -337,6 +370,8 @@ app.get("/stream/:name", async function(req, res) {
     outputStream.on("end", function() {
       console.log("End of rate-limited stream");
     });
+    console.log("pass end: " + pass.listenerCount("end"));
+    console.log("output end: " + outputStream.listenerCount("error"));
   }
   contentStreams[name].pipe(
     res,
@@ -347,6 +382,9 @@ app.get("/stream/:name", async function(req, res) {
     listenerCounts[name]--;
     if (listenerCounts[name] <= 0) {
       delete listenerCounts[name];
+      try {
+        delete playlistToName[name];
+      } catch (ex) {}
     }
   });
   //res.send(req.params.name);
@@ -355,4 +393,5 @@ app.get("/stream/:name", async function(req, res) {
 const listener = http.listen(process.env.PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
+process.on("warning", e => console.warn(e.stack));
 //setInterval(function(){console.log(listenerCounts)},2500);
