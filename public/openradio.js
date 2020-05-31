@@ -10,6 +10,9 @@ function controllerclick(event) {
   if (event.ctrlKey) {
     $("#streamelem").toggle();
   } else {
+    let streamelem = document.getElementById("streamelem");
+    streamelem.muted = !streamelem.muted;
+    $("#controller-icon").toggleClass("fa-play fa-pause");
   }
 }
 $(function() {
