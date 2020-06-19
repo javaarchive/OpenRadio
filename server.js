@@ -167,7 +167,7 @@ app.post("/edit_playlists", async function(req, res) {
   } else {
     res.send("Please log in");
   }
-  res.redirect("/edit_playlists");
+  //res.redirect("/edit_playlists");
 });
 app.post("/delete_playlist_item/:name", async function(req, res) {
   if (req.session.logintime) {
@@ -192,7 +192,7 @@ app.post("/delete_playlist_item/:name", async function(req, res) {
   } else {
     res.send("Please log in");
   }
-  res.redirect("/edit_playlists");
+  //res.redirect("/edit_playlists");
 });
 app.get("/delete_playlist/:name", async function(req, res) {
   if (req.session.logintime) {
