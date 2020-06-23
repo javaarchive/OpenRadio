@@ -1,10 +1,12 @@
 
 // ButterChurn
 // My failed attempt
-
+var currentPreset = 0;
 function enableButterchurn() {
   let audioContext = new AudioContext();
   let canvas = document.createElement("canvas");
+  canvas.height = 600;
+  canvas.width = 800;
   document.body.appendChild(canvas);
   let audio = document.getElementById("streamelem");
   const gainNode = new AnalyserNode(audioContext, {
@@ -27,15 +29,18 @@ function enableButterchurn() {
 console.log("No errors I guess");
   // get audioNode from audio source or microphone
 
-  visualizer.connectAudio(src);
+  visualizer.connectAudio(gainNode);
 
   // load a preset
 
-  const presets = butterchurnPresets.getPresets();
+  const presets_obj = butterchurnPresets.getPresets();
+  const presets = Object.values(presets_obj);
   const preset =
     presets["Flexi, martin + geiss - dedicated to the sherwin maxawow"];
-
-  visualizer.loadPreset(preset, 0.0); // 2nd argument is the number of seconds to blend presets
+//const chosenPresets = ["Flexi, martin + geiss - dedicated to the sherwin maxawow","$$$ Royal - Mashup (431)","$$$ Royal - Mashup (220)"]
+  
+    visualizer.loadPreset(presets[0], 2); // 2nd argument is the number of seconds to blend presets
+ 
 
   // resize visualizer
 
@@ -44,7 +49,23 @@ console.log("No errors I guess");
   // render a frame
 
   visualizer.render();
+  window.render = function(){
+    visualizer.render();
+    window.requestAnimationFrame(window.render);
+  }
+  window.document.body.addEventListener("keyup", function(e){
+    console.info(e.keyCode);
+    if(e.keyCode == 37){
+      currentPreset = (currentPreset + presets.length - 1) % presets.length;
+      visualizer.loadPreset(presets[currentPreset], 2);
+    }else if(e.keyCode == 39){
+      currentPreset = (currentPreset + presets.length + 1) % presets.length;
+      visualizer.loadPreset(presets[currentPreset], 2);
+    }
+  })
+  window.render();
 }
+
 var khistory = "";
 function KeyPress(e) {
   var keynum;
