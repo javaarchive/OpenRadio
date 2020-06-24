@@ -81,3 +81,7 @@ footer {
 #streamelem{
   width: 100%;
 }
+canvas{
+  width: 100%;
+  height: auto;
+}

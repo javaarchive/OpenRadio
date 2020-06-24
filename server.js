@@ -254,7 +254,11 @@ io.on("connection", function(socket) {
         socket.leave(socketsRooms[i]);
       }
     } catch (ex) {}
+    idtoplaylist[socket.id] = data.name;
     socket.join(data.name);
+    socket.emit("itemchange", {
+        name: playlistToName[idtoplaylist[socket.id]]
+      });
   });
   socket.on("getcurrentitem", function(data) {
     try {

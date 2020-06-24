@@ -44,7 +44,7 @@ console.log("No errors I guess");
 
   // resize visualizer
 
-  visualizer.setRendererSize(1600, 1200);
+  visualizer.setRendererSize(800, 600);
 
   // render a frame
 
