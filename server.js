@@ -7,6 +7,8 @@ var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
 const Endb = require("endb");
+let CSV = require("csv-string");
+
 var { retrieveStream } = require("./contentHandler");
 app.engine(".html", exphbs({ extname: ".html" }));
 app.set("view engine", ".html");
@@ -102,7 +104,7 @@ app.get("/playlist_editor/:name", async function(req, res) {
       }
       res.render(__dirname + "/views/playlist_editor.html", {
         ...config.webexports,
-        ...{ playlist_items: output, playlist_name: name }
+        ...{ playlist_items: output, playlist_name: name, playlist_escapedname: encodeURIComponent(name) }
       });
     } else {
       req.send("Not a playlist");
@@ -120,19 +122,42 @@ app.post("/playlist_editor/:name", async function(req, res) {
     }
     if (await playlists.has(name)) {
       let playlist = await playlists.get(name);
-      if (!req.body.new_item_pos || req.body.new_item_pos == "") {
-        playlist.push({
-          name: req.body.item_name,
-          source: req.body.item_source
-        });
+      if (req.body.action == "singleadd") {
+        if (!req.body.new_item_pos || req.body.new_item_pos == "") {
+          playlist.push({
+            name: req.body.item_name,
+            source: req.body.item_source
+          });
+        } else {
+          playlist.splice(req.body.new_item_pos, 0, {
+            name: req.body.item_name,
+            source: req.body.item_source
+          });
+        }
       } else {
-        playlist.splice(req.body.new_item_pos, 0, {
-          name: req.body.item_name,
-          source: req.body.item_source
-        });
+        if (!req.body.new_item_pos || req.body.new_item_pos == "") {
+          let lines = CSV.parse(req.body.bulkimportdata)
+          for (let i = 0; i < lines.length; i++) {
+            //console.log(lines[i]);
+           // console.log(lines[i]);
+            playlist.push({
+              name: lines[i][0],
+              source: lines[i][1]
+            });
+          }
+        } else {
+          let lines = req.body.bulkimportdata;
+          for (let i = 0; i < lines.length; i++) {
+            let lineData = CSV.parse(lines[i]);
+            playlist.splice(req.body.new_item_pos, 0, {
+              name: lineData[0],
+              source: lineData[1]
+            });
+          }
+        }
       }
       await playlists.set(name, playlist);
-      res.redirect("/playlist_editor/" + name);
+      res.redirect("/playlist_editor/" + encodeURIComponent(name));
     } else {
       res.send("Playlist doesn't exist");
     }
@@ -140,6 +165,7 @@ app.post("/playlist_editor/:name", async function(req, res) {
     res.send("Please log in");
   }
 });
+
 app.get("/edit_playlists", async function(req, res) {
   if (req.session.logintime) {
     let output = "";
@@ -149,6 +175,7 @@ app.get("/edit_playlists", async function(req, res) {
         output +
         admin_playlist_template({
           name: all_playlists[i]["key"],
+        escapedname: encodeURIComponent(all_playlists[i]["key"]),
           count: all_playlists[i]["value"].length
         });
     }
@@ -236,7 +263,7 @@ app.get("/", async (req, res) => {
   for (var i = 0; i < streams.length; i++) {
     output =
       output +
-      template({ name: streams[i], streamaudiopath: "/stream/" + streams[i] });
+      template({ name: streams[i], streamaudiopath: "/stream/" + encodeURIComponent(streams[i]), escapedname: encodeURIComponent(streams[i])});
   }
   //console.log(output);
   res.render(__dirname + "/views/index.html", {
@@ -257,8 +284,8 @@ io.on("connection", function(socket) {
     idtoplaylist[socket.id] = data.name;
     socket.join(data.name);
     socket.emit("itemchange", {
-        name: playlistToName[idtoplaylist[socket.id]]
-      });
+      name: playlistToName[idtoplaylist[socket.id]]
+    });
   });
   socket.on("getcurrentitem", function(data) {
     try {

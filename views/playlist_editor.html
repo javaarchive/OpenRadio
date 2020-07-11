@@ -6,14 +6,16 @@
   <a href="/edit_playlists" class="btn btn-success"
     >Go Back</a
   >
-  <a href="/delete_playlist/{{playlist_name}}" class="btn btn-warning"
+  <a href="/delete_playlist/{{playlist_escapedname}}" class="btn btn-warning"
     >Delete Playlist</a
   >
   <div class="list-group">
     {{{playlist_items}}}
   </div>
-  <form method="POST">
+  <div class="row">
+  <form method="POST" class="col-6">
     Add new item to playlist. Duplicates are allowed!
+    <input class="hidden" type="hidden" name="action" value="singleadd" hidden/>
     <input
       class="form-control"
       name="item_name"
@@ -24,13 +26,23 @@
       name="item_source"
       placeholder="Item source. Usually the url"
     />
-    Optional Position: <input type="number" id="add-number" name="new_item_pos" />
+    Optional Insertion Position: <input type="number" id="add-number" name="new_item_pos" />
     <button class="btn btn-success" type="submit">
       Add item to {{playlist_name}}
     </button>
   </form>
-  <form id="playlist-item-delete-form" method="POST" action="/delete_playlist_item/{{playlist_name}}">
-    <input type="number" hidden id="del-number" name="delete_item_pos" />
+    <form method="POST" class="col-6">
+    Add multiple items to a playlist. Format is name,url seperated by line breaks. 
+    <input class="hidden" type="hidden" name="action" value="multiadd" hidden/>
+    <textarea class="form-control" name="bulkimportdata" rows="6" placeholder="Please use csv style format name,url"></textarea>
+    Optional Insertion Position: <input type="number" id="add-number-multi" name="new_items_pos" />
+    <button class="btn btn-success" type="submit">
+      Import to {{playlist_name}}
+    </button>
+  </form>
+  </div>
+  <form id="playlist-item-delete-form" method="POST" action="/delete_playlist_item/{{playlist_escapedname}}" style="display:none;">
+    <input type="number" hidden id="del-number" name="delete_item_pos"/>
   </form>
   <p>
     If another administrator edits the playlist and you delete an item the wrong

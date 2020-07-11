@@ -2,7 +2,7 @@
   "//1": "OpenRadio",
   "//2": "https://docs.npmjs.com/files/package.json",
   "//3": "updating this file will download and update your packages",
-  "info":"Type here to reinstall modules in glitch",
+  "info": "Type here to reinstall modules in glitch",
   "name": "hello-empowered-express",
   "version": "0.0.1",
   "description": "A simple Node app built on Express, instantly up and running.",
@@ -27,8 +27,8 @@
     "sqlite3": "^4.2.0",
     "better-sqlite3": "^7.0.1",
     "butterchurn": "^2.6.7",
-    "butterchurn-presets": "^2.4.7"
-
+    "butterchurn-presets": "^2.4.7",
+    "csv-string": "^4.0.1"
   },
   "engines": {
     "node": "10.x"
