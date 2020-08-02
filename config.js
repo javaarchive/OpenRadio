@@ -1,7 +1,7 @@
 module.exports = {
-  "brand":"OpenRadio",
+  "brand":"Radio",
   "webexports":{
-    "display_brand":"OpenRadio"
+    "display_brand":"Radio"
   },
   "chunkSize": 1024,
   "inputChunkSize": 1024,
