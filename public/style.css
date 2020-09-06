@@ -85,3 +85,7 @@ canvas{
   width: 100%;
   height: auto;
 }
+.stations{
+  max-height: 27em; /*TEMPORARY HACK/FIX*/
+  overflow: scroll;
+}
