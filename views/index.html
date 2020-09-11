@@ -1,13 +1,84 @@
-<script src="https://cdn.jsdelivr.net/npm/butterchurn@2.6.7/lib/butterchurn.min.js" type="module"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/butterchurn@2.6.7/lib/butterchurn.min.js"
+  type="module"
+></script>
 <script src="https://cdn.jsdelivr.net/npm/butterchurn-presets@2.4.7/lib/butterchurnPresets.min.js"></script>
- <script src="/modulescript.js" type="module"></script>
+<script src="/modulescript.js" type="module"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/openradio.js"></script>
 <div class="container">
-  <div class="stations">
-  {{{stations}}}
-  <audio id="streamelem" src="/stream/test" controls autoplay preload="auto"></audio>
+  <a
+    data-toggle="modal"
+    data-target="#modal_extras"
+     id="extras_launcher"
+     href="javascript:void(0);"
+  >
+    Extras
+  </a>
+
+  <!-- Modal -->
+  <div
+    class="modal fade"
+    id="modal_extras"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="extraModalCenterTitle"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="extraModalLongTitle">Extra features</h5>
+          <button
+            type="button"
+            class="close"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <h2>
+            Developer Stuff
+          </h2>
+          <button
+            onclick="controllerclick({debug: true});"
+            class="btn btn-warning"
+          >
+            Show audio element
+          </button>
+          <h2>
+            Visualizations
+          </h2>
+          <button onclick="window.toggleBc();" class="btn btn-success">
+            Butterchurn/Milkdrop visualizer
+          </button>
+          <h2>
+            Misc
+          </h2>
+          <button onclick="$('#extras_launcher').hide();" class="btn btn-error">
+            Remove Ugly Extras Launcher
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
+  <div class="stations">
+    {{{stations}}}
+    <audio
+      id="streamelem"
+      src="/stream/main"
+      controls
+      autoplay
+      preload="auto"
+    ></audio>
+  </div>
 </div>
 <div class="fixed-bottom bottom">
   <h4 class="white spaced" id="item-name-display">

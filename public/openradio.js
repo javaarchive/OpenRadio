@@ -5,9 +5,9 @@ socket.on("itemchange", function(data){
   $("#item-name-display").text(curItem);
 })
 function controllerclick(event) {
-  console.log("Clicked");
-  console.log(event);
-  if (event.ctrlKey) {
+  //console.log("Clicked");
+  //console.log(event);
+  if (event.ctrlKey || event.debug) {
     $("#streamelem").toggle();
   } else {
     let streamelem = document.getElementById("streamelem");

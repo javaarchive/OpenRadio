@@ -1,7 +1,8 @@
 
 // ButterChurn
-// My failed attempt
 var currentPreset = 0;
+var setupComplete = false;
+var bcEnabled = true;
 function enableButterchurn() {
   let audioContext = new AudioContext();
   let canvas = document.createElement("canvas");
@@ -39,7 +40,7 @@ console.log("No errors I guess");
     presets["Flexi, martin + geiss - dedicated to the sherwin maxawow"];
 //const chosenPresets = ["Flexi, martin + geiss - dedicated to the sherwin maxawow","$$$ Royal - Mashup (431)","$$$ Royal - Mashup (220)"]
   
-    visualizer.loadPreset(presets[0], 2); // 2nd argument is the number of seconds to blend presets
+    visualizer.loadPreset(presets[0], 1); // 2nd argument is the number of seconds to blend presets
  
 
   // resize visualizer
@@ -50,7 +51,9 @@ console.log("No errors I guess");
 
   visualizer.render();
   window.render = function(){
+    if(bcEnabled){
     visualizer.render();
+    }
     window.requestAnimationFrame(window.render);
   }
   window.document.body.addEventListener("keyup", function(e){
@@ -64,8 +67,15 @@ console.log("No errors I guess");
     }
   })
   window.render();
+  setupComplete = true;
 }
-
+function toggleBc(){
+  if(!setupComplete){
+    enableButterchurn();
+  }else{
+    bcEnabled = !bcEnabled;
+  }
+}
 var khistory = "";
 function KeyPress(e) {
   var keynum;
@@ -87,4 +97,5 @@ function KeyPress(e) {
   } else {
   }
 }
+window.toggleBc = toggleBc;
 window.KeyPress = KeyPress;

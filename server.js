@@ -99,7 +99,8 @@ app.get("/playlist_editor/:name", async function(req, res) {
           admin_playlist_item_template({
             name: playlist[i].name,
             count: playlist[i].source,
-            pos: i.toString()
+            pos: i.toString(),
+          link: playlist[i].source
           });
       }
       res.render(__dirname + "/views/playlist_editor.html", {
