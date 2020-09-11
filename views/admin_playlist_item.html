@@ -1,5 +1,16 @@
 <a title="{{link}}" href="#" class="list-group-item list-group-item-action"
   >{{name}}: {{link}}
-  <div class="float-right" onclick="deleteitem('{{pos}}', this)">
-   <i class="fas fa-trash-alt"></i>
-  </div></a>
+  <div class="float-right">
+    <a href="{{link}}" class="spaced-icon"
+      ><i class="fas fa-external-link-alt"></i>
+    </a>
+    <span onclick="moveUpItem('{{pos}}', this)" class="spaced-icon"
+      ><i class="fas fa-angle-up"></i>
+    </span>
+    <span onclick="moveDownItem('{{pos}}', this)" class="spaced-icon"
+      ><i class="fas fa-angle-down"></i>
+    </span>
+    <span onclick="deleteitem('{{pos}}', this)" class="spaced-icon"
+      ><i class="fas fa-trash-alt"></i>
+    </span></div
+></a>

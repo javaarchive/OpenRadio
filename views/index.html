@@ -55,10 +55,16 @@
             Butterchurn/Milkdrop visualizer
           </button>
           <h2>
-            Misc
+            Ui Misc
           </h2>
-          <button onclick="$('#extras_launcher').hide();" class="btn btn-error">
+          <button onclick="$('#extras_launcher').hide();" class="btn btn-danger">
             Remove Ugly Extras Launcher
+          </button>
+          <button onclick="nextPalette();" class="btn btn-primary">
+            Next Palette
+          </button>
+          <button onclick="prevPalette();" class="btn btn-primary">
+            Previous Palette
           </button>
         </div>
         <div class="modal-footer">
@@ -82,7 +88,7 @@
 </div>
 <div class="fixed-bottom bottom">
   <h4 class="white spaced" id="item-name-display">
-    Song Indicator Coming Soon
+    Pick a radio any radio
   </h4>
   <div class="white center justify-content-center" id="controller">
     <i class="fas fa-pause" id="controller-icon"></i>

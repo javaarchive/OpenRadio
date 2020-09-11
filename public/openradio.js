@@ -1,3 +1,5 @@
+const palettes = ["/palette1.css","/palette2.css"];
+
 const socket = io();
 var curItem = "Unknown";
 socket.on("itemchange", function(data){
@@ -32,4 +34,20 @@ function play(dest, elem) {
   socket.emit("getcurrentitem",{});
   $("#station-name-display").text(name);
   console.log("Station Name is " + name);
+}
+let paletteID = 0;
+
+function updatePalette(){
+  console.log("Updating palette to "+palettes[paletteID]);
+  document.getElementById("item-color-scheme-style").href = palettes[paletteID];
+}
+function nextPalette(){
+  paletteID ++;
+  paletteID = paletteID % palettes.length;
+  updatePalette();
+}
+function prevPalette(){
+  paletteID += palettes.length - 1;
+  paletteID = paletteID % palettes.length;
+  updatePalette();
 }

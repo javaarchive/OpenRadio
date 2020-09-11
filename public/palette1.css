@@ -1,0 +1,12 @@
+.station:nth-child(4n){
+  background-color: #EDD382;
+}
+.station:nth-child(4n + 1){
+  background-color: #FC9E4F;
+}
+.station:nth-child(4n + 2){
+  background-color: #FF521B;
+}
+.station:nth-child(4n + 3){
+  background-color: #020122;
+}

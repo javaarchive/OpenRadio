@@ -1,4 +1,8 @@
-// OpenRadio
+// | OpenRadio |
+// Written by github:javaarchive
+// Serves up infinite mp3 streams of music
+// May not be infinite depending on your reverse proxy
+
 const express = require("express");
 const app = express();
 const path = require("path");
