@@ -2,6 +2,12 @@
 // Written by github:javaarchive
 // Serves up infinite mp3 streams of music
 // May not be infinite depending on your reverse proxy
+// Contribution wall:
+// 1 -
+// 2 -
+// 3 - aboutDavid
+// Github Repo: https://github.com/javaarchive/OpenRadio
+// Feel free to make pull requests
 
 const express = require("express");
 const app = express();
@@ -24,6 +30,7 @@ let sess = session({
   resave: true,
   saveUninitialized: false
 });
+
 app.use(sess);
 var bodyParser = require("body-parser");
 app.use(bodyParser.json()); // support json encoded bodies
@@ -104,12 +111,16 @@ app.get("/playlist_editor/:name", async function(req, res) {
             name: playlist[i].name,
             count: playlist[i].source,
             pos: i.toString(),
-          link: playlist[i].source
+            link: playlist[i].source
           });
       }
       res.render(__dirname + "/views/playlist_editor.html", {
         ...config.webexports,
-        ...{ playlist_items: output, playlist_name: name, playlist_escapedname: encodeURIComponent(name) }
+        ...{
+          playlist_items: output,
+          playlist_name: name,
+          playlist_escapedname: encodeURIComponent(name)
+        }
       });
     } else {
       req.send("Not a playlist");
@@ -141,10 +152,10 @@ app.post("/playlist_editor/:name", async function(req, res) {
         }
       } else {
         if (!req.body.new_item_pos || req.body.new_item_pos == "") {
-          let lines = CSV.parse(req.body.bulkimportdata)
+          let lines = CSV.parse(req.body.bulkimportdata);
           for (let i = 0; i < lines.length; i++) {
             //console.log(lines[i]);
-           // console.log(lines[i]);
+            // console.log(lines[i]);
             playlist.push({
               name: lines[i][0],
               source: lines[i][1]
@@ -180,7 +191,7 @@ app.get("/edit_playlists", async function(req, res) {
         output +
         admin_playlist_template({
           name: all_playlists[i]["key"],
-        escapedname: encodeURIComponent(all_playlists[i]["key"]),
+          escapedname: encodeURIComponent(all_playlists[i]["key"]),
           count: all_playlists[i]["value"].length
         });
     }
@@ -214,6 +225,64 @@ app.post("/delete_playlist_item/:name", async function(req, res) {
           res.redirect("/playlist_editor/" + name);
         } else {
           res.send("Invalid Position");
+        }
+      } else {
+        res.send("Specify a item index");
+      }
+    } else {
+      res.send("Invalid Playlist Name");
+    }
+  } else {
+    res.send("Please log in");
+  }
+  //res.redirect("/edit_playlists");
+});
+function swapElems(arr, index1, index2) {
+  //console.log("Swap "+index1+" "+index2);
+  var temp = arr[index1];
+  arr[index1] = arr[index2];
+  //console.log("Swapping "+arr[index2]+" "+temp);
+  arr[index2] = temp;
+}
+
+app.post("/move_up_playlist_item/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (name && (await playlists.has(name))) {
+      let playlist = await playlists.get(name);
+      if (req.body.target_pos) {
+        let pos = parseInt(req.body.target_pos);
+        if (pos < playlist.length - 1 && pos >= 0) {
+          swapElems(playlist, pos, pos + 1);
+          await playlists.set(name, playlist);
+          res.redirect("/playlist_editor/" + name);
+        } else {
+          res.send("Invalid Position for moving up");
+        }
+      } else {
+        res.send("Specify a item index");
+      }
+    } else {
+      res.send("Invalid Playlist Name");
+    }
+  } else {
+    res.send("Please log in");
+  }
+  //res.redirect("/edit_playlists");
+});
+app.post("/move_down_playlist_item/:name", async function(req, res) {
+  if (req.session.logintime) {
+    let name = req.params.name;
+    if (name && (await playlists.has(name))) {
+      let playlist = await playlists.get(name);
+      if (req.body.target_pos) {
+        let pos = parseInt(req.body.target_pos);
+        if (pos > 0 && pos < playlist.length) {
+          swapElems(playlist, pos, pos - 1);
+          await playlists.set(name, playlist);
+          res.redirect("/playlist_editor/" + name);
+        } else {
+          res.send("Invalid Position for moving down");
         }
       } else {
         res.send("Specify a item index");
@@ -268,7 +337,11 @@ app.get("/", async (req, res) => {
   for (var i = 0; i < streams.length; i++) {
     output =
       output +
-      template({ name: streams[i], streamaudiopath: "/stream/" + encodeURIComponent(streams[i]), escapedname: encodeURIComponent(streams[i])});
+      template({
+        name: streams[i],
+        streamaudiopath: "/stream/" + encodeURIComponent(streams[i]),
+        escapedname: encodeURIComponent(streams[i])
+      });
   }
   //console.log(output);
   res.render(__dirname + "/views/index.html", {

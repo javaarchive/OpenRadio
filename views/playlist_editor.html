@@ -9,7 +9,7 @@
   <a href="/delete_playlist/{{playlist_escapedname}}" class="btn btn-warning"
     >Delete Playlist</a
   >
-  <div class="list-group">
+  <div class="list-group" id="items-list">
     {{{playlist_items}}}
   </div>
   <div class="row">
@@ -43,6 +43,12 @@
   </div>
   <form id="playlist-item-delete-form" method="POST" action="/delete_playlist_item/{{playlist_escapedname}}" style="display:none;">
     <input type="number" hidden id="del-number" name="delete_item_pos"/>
+  </form>
+  <form id="playlist-item-move-down" method="POST" action="/move_down_playlist_item/{{playlist_escapedname}}" style="display:none;">
+    <input type="number" hidden id="target-number-down" name="target_pos"/>
+  </form>
+  <form id="playlist-item-move-up" method="POST" action="/move_up_playlist_item/{{playlist_escapedname}}" style="display:none;">
+    <input type="number" hidden id="target-number-up" name="target_pos"/>
   </form>
   <p>
     If another administrator edits the playlist and you delete an item the wrong
