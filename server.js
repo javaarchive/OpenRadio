@@ -393,6 +393,7 @@ io.on("connection", function(socket) {
 var playlistToName = {};
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
+
 async function playContent(name, outputStream, realOutputStream, finish) {
   console.log("Playing playlist " + name);
   let playlist = await playlists.get(name);
@@ -445,7 +446,7 @@ app.get("/stream/:name", async function(req, res) {
     return;
   }
   res.set({
-    "Content-Type": "audio/mpeg3",
+    "Content-Type": "audio/mpeg",
     "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });

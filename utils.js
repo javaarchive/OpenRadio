@@ -4,48 +4,78 @@ const { Passthrough, Transform } = require("stream");
 
 class SyncStream extends Transform {
   constructor(limit, maxSize) {
+    super();
     this.queue = [];
     this.limit = limit;
+    this.chunkSize = limit; // Apparently my ignorance caused this to be needed
     this.maxSize = maxSize;
     this.curIncomplete = Buffer.alloc(0);
+    this.cb = function() {};
     setInterval(this.flushData.bind(this), 1000);
   }
   _transform(chunk, encoding, done) {
+    //console.log("Got", chunk);
     if (this.curIncomplete.length > 0) {
+      console.log("Incomplete not empty so appending");
       chunk = this.curIncomplete + chunk;
       this.curIncomplete = Buffer.alloc(0);
+      //console.log("Cl")
     }
     let overflowed = false;
+    console.log(chunk.length, Math.floor(chunk.length / this.chunkSize));
     for (let i = 0; i < Math.floor(chunk.length / this.chunkSize); i++) {
-      if(this.queue.length >= this.maxSize){
-        this.curIncomplete = chunk.slice(i*this.chunkSize);
+      if (this.queue.length >= this.maxSize) {
+        console.log("Overflow ending!");
+        this.curIncomplete = chunk.slice(i * this.chunkSize);
         overflowed = true;
         break;
       }
-      this.queue.push(chunk.slice(i*this.chunkSize,(i + 1) * this.chunkSize));
-      
+      console.log("Pushed " + i);
+      this.queue.push(
+        chunk.slice(i * this.chunkSize, (i + 1) * this.chunkSize)
+      );
     }
-    if(!overflowed){
-      this.curIncomplete = chunk.slice(Math.floor(chunk.length/this.chunkSize)*this.chunkSize);
+    console.log(this.queue.length);
+    if (!overflowed) {
+      console.log("Appending to incomplete");
+      this.curIncomplete = chunk.slice(
+        Math.floor(chunk.length / this.chunkSize) * this.chunkSize
+      );
+      done();
+    } else {
+      this.cb = done;
     }
   }
-  flushData(){
-    this.push(this.queue.unshift());
-    this.onConsume();
+  flushData() {
+    //console.log(this.queue);
+    if (this.queue.length > 0) {
+      let chunkFixedSize = this.queue.shift();
+      console.log(typeof chunkFixedSize);
+      console.log("Queue length ",this.queue.length);
+      this.push(chunkFixedSize);
+      
+      this.onConsume();
+    } else {
+      this.cb();
+    }
   }
   onConsume() {
     let chunk = this.curIncomplete;
     let overflowed = false;
     for (let i = 0; i < Math.floor(chunk.length / this.chunkSize); i++) {
-      if(this.queue.length >= this.maxSize){
-        this.curIncomplete = chunk.slice(i*this.chunkSize);
+      if (this.queue.length >= this.maxSize) {
+        this.curIncomplete = chunk.slice(i * this.chunkSize);
         overflowed = true;
         break;
       }
-      this.queue.push(chunk.slice(i*this.chunkSize,(i + 1) * this.chunkSize));
+      this.queue.push(
+        chunk.slice(i * this.chunkSize, (i + 1) * this.chunkSize)
+      );
     }
-    if(!overflowed){
-      this.curIncomplete = this.curIncomplete.slice(Math.floor(this.curIncomplete.length/this.chunkSize)*this.chunkSize);
+    if (!overflowed) {
+      this.curIncomplete = this.curIncomplete.slice(
+        Math.floor(this.curIncomplete.length / this.chunkSize) * this.chunkSize
+      );
     }
   }
 }
@@ -117,4 +147,4 @@ class MultiWritable extends Writable {
     );
   }
 }
-module.exports = { MultiWritable: MultiWritable };
+module.exports = { MultiWritable: MultiWritable, SyncStream: SyncStream };
