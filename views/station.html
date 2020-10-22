@@ -1,10 +1,11 @@
 <div
-  class="station spaced-2x whitecolor"
+  class="station spaced-2x whitecolor for-not-buggy-systems"
 >
-  <div class="station-name">
+  <div class="station-name" onclick="play('{{{streamaudiopath}}}', this)">
     {{name}}
-    <div class="float-right" onclick="play('{{{streamaudiopath}}}', this)">
+    <div class="float-right" >
       <i class="fas fa-play whitecolor"></i>
     </div>
   </div>
+  
 </div>

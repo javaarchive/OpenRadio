@@ -51,3 +51,11 @@ function prevPalette(){
   paletteID = paletteID % palettes.length;
   updatePalette();
 }
+function toggleMinimal(){
+  $(".for-buggy-systems").toggleClass("d-none");
+  $(".for-not-buggy-systems").toggleClass("d-none");
+}
+$(function(){
+ $(".for-buggy-systems").toggleClass("d-none");
+  $(".debug-button").click(toggleMinimal);
+})

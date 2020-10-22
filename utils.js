@@ -1,5 +1,55 @@
 const Writable = require("stream").Writable;
 const { sendInterval } = require("./config");
+const { Passthrough, Transform } = require("stream");
+
+class SyncStream extends Transform {
+  constructor(limit, maxSize) {
+    this.queue = [];
+    this.limit = limit;
+    this.maxSize = maxSize;
+    this.curIncomplete = Buffer.alloc(0);
+    setInterval(this.flushData.bind(this), 1000);
+  }
+  _transform(chunk, encoding, done) {
+    if (this.curIncomplete.length > 0) {
+      chunk = this.curIncomplete + chunk;
+      this.curIncomplete = Buffer.alloc(0);
+    }
+    let overflowed = false;
+    for (let i = 0; i < Math.floor(chunk.length / this.chunkSize); i++) {
+      if(this.queue.length >= this.maxSize){
+        this.curIncomplete = chunk.slice(i*this.chunkSize);
+        overflowed = true;
+        break;
+      }
+      this.queue.push(chunk.slice(i*this.chunkSize,(i + 1) * this.chunkSize));
+      
+    }
+    if(!overflowed){
+      this.curIncomplete = chunk.slice(Math.floor(chunk.length/this.chunkSize)*this.chunkSize);
+    }
+  }
+  flushData(){
+    this.push(this.queue.unshift());
+    this.onConsume();
+  }
+  onConsume() {
+    let chunk = this.curIncomplete;
+    let overflowed = false;
+    for (let i = 0; i < Math.floor(chunk.length / this.chunkSize); i++) {
+      if(this.queue.length >= this.maxSize){
+        this.curIncomplete = chunk.slice(i*this.chunkSize);
+        overflowed = true;
+        break;
+      }
+      this.queue.push(chunk.slice(i*this.chunkSize,(i + 1) * this.chunkSize));
+    }
+    if(!overflowed){
+      this.curIncomplete = this.curIncomplete.slice(Math.floor(this.curIncomplete.length/this.chunkSize)*this.chunkSize);
+    }
+  }
+}
+
 // Deprecated! Inefficent and laggy
 class MultiWritable extends Writable {
   constructor(options) {
@@ -8,15 +58,15 @@ class MultiWritable extends Writable {
     this.sendbuffer = [];
     this.started = false;
   }
-  thinkItIsDone(){
-    console.log("Blank empty buffer func called")
+  thinkItIsDone() {
+    console.log("Blank empty buffer func called");
     // Do nothing let user override
   }
-  onExhaust(){
-    console.log("Blank Exhaust Called")
+  onExhaust() {
+    console.log("Blank Exhaust Called");
     // Do nothing let user override
   }
-  get empty(){
+  get empty() {
     return this.sendbuffer.length == 0;
   }
   sendChunks() {
@@ -43,7 +93,7 @@ class MultiWritable extends Writable {
           }
         });
       }
-    }else{
+    } else {
       this.thinkItIsDone();
     }
   }
@@ -62,7 +112,9 @@ class MultiWritable extends Writable {
       callback: callback
     });
     //console.log(this.sendbuffer);
-    console.log("Queued Chunk " + this.sendbuffer.length+" chunk len "+chunk.length);
+    console.log(
+      "Queued Chunk " + this.sendbuffer.length + " chunk len " + chunk.length
+    );
   }
 }
 module.exports = { MultiWritable: MultiWritable };

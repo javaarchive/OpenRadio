@@ -8,11 +8,11 @@
 // 3 - aboutDavid
 // Github Repo: https://github.com/javaarchive/OpenRadio
 // Feel free to make pull requests
-
+// And yes I type here to reload the app
 const express = require("express");
 const app = express();
 const path = require("path");
-const { MultiWritable } = require("./utils");
+const { MultiWritable,SyncStream } = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
@@ -48,6 +48,10 @@ var stationtemplate = fs.readFileSync(
   __dirname + "/views/station.html",
   "utf8"
 );
+var stationalttemplate = fs.readFileSync(
+  __dirname + "/views/stationalt.html",
+  "utf8"
+);
 var adminplaylisttemplate = fs.readFileSync(
   __dirname + "/views/admin_playlist.html",
   "utf8"
@@ -59,6 +63,7 @@ var adminplaylistitemtemplate = fs.readFileSync(
 console.log(stationtemplate);
 const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
+var templatealt = Handlebars.compile(stationalttemplate);
 var admin_playlist_template = Handlebars.compile(adminplaylisttemplate);
 var admin_playlist_item_template = Handlebars.compile(
   adminplaylistitemtemplate
@@ -343,6 +348,15 @@ app.get("/", async (req, res) => {
         escapedname: encodeURIComponent(streams[i])
       });
   }
+  for (var i = 0; i < streams.length; i++) {
+    output =
+      output +
+      templatealt({
+        name: streams[i],
+        streamaudiopath: "/stream/" + encodeURIComponent(streams[i]),
+        escapedname: encodeURIComponent(streams[i])
+      });
+  }
   //console.log(output);
   res.render(__dirname + "/views/index.html", {
     ...config.webexports,
@@ -438,14 +452,14 @@ app.get("/stream/:name", async function(req, res) {
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
 
-  if (!Object.keys(listenerCounts).includes(name)) {
-    listenerCounts[name] = 0;
+  if (!(name in listenerCounts)) {
+    listenerCounts[name] = 0; // Init if not already
   }
 
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = tg.throttle();
+    let outputStream = new SyncStream(config.bitrate,config.floodMax);//tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;
