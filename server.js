@@ -438,8 +438,9 @@ async function playContent(name, outputStream, realOutputStream, finish) {
   //console.log("error: " + processer.listenerCount("error"));
 }
 const stream = require("stream");
-const { ThrottleGroup, Throttle } = require("stream-throttle");
-var tg = new ThrottleGroup({ rate: config.bitrate });
+//const { ThrottleGroup, Throttle } = require("stream-throttle");
+//var tg = new ThrottleGroup({ rate: config.bitrate });
+
 app.get("/stream/:name", async function(req, res) {
   if (!(await playlists.has(req.params.name))) {
     res.status(404);
@@ -449,7 +450,7 @@ app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
-    "Transfer-Encoding": "chunked"
+    "Transfer-Encoding": "chunked", 'Accept-Ranges': 'bytes' 
   });
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
@@ -457,7 +458,6 @@ app.get("/stream/:name", async function(req, res) {
   if (!(name in listenerCounts)) {
     listenerCounts[name] = 0; // Init if not already
   }
-
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
