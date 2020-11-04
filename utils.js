@@ -10,10 +10,25 @@ class SyncStream extends Transform {
     this.chunkSize = limit; // Apparently my ignorance caused this to be needed
     this.maxSize = maxSize;
     this.curIncomplete = Buffer.alloc(0);
-    this.cb = function() {};
-    setInterval(this.flushData.bind(this), 1000);
+    //this.cb = function() {};
+    this.cbs = [];
+   this.dead = false;
+    this.shock = null;
+    this.flushInterval = setInterval(this.flushData.bind(this), 1000);
+  }
+  stop(){
+    console.log("Sync Stream stopped");
+    clearInterval(this.flushInterval);
+    this.dead = true;
+  }
+  sendShock(x){
+    // Suddenly send x chunks on next flush (normally used when new client joins because google home requires like 30 seconds of audio until it actually starts playing)
+    this.shock = x;
   }
   _transform(chunk, encoding, done) {
+    if(this.dead){
+      throw "Dead stream";
+    }
     //console.log("Got", chunk);
     if (this.curIncomplete.length > 0) {
       console.log("Incomplete not empty so appending");
@@ -43,20 +58,33 @@ class SyncStream extends Transform {
       );
       done();
     } else {
-      this.cb = done;
+      this.cbs.push(done);
     }
   }
   flushData() {
     //console.log(this.queue);
+    if(this.shock){
+      let timesToCallAgain = this.shock - 1;
+      this.shock = null;
+      for(let i = 0; i < timesToCallAgain; i ++){
+        this.flushData();
+      }
+    }
+    console.log("Flushing data");
     if (this.queue.length > 0) {
       let chunkFixedSize = this.queue.shift();
       console.log(typeof chunkFixedSize);
       console.log("Queue length ", this.queue.length);
+      console.log(chunkFixedSize);
       this.push(chunkFixedSize);
-
       this.onConsume();
     } else {
-      this.cb();
+      if(this.cbs.length > 0){
+        (this.cbs.shift())();
+      }else{
+        
+      }
+      console.log("queue empty")
     }
   }
   onConsume() {
@@ -79,7 +107,6 @@ class SyncStream extends Transform {
     }
   }
 }
-
 // Deprecated! Inefficent and laggy
 class MultiWritable extends Writable {
   constructor(options) {

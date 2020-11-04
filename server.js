@@ -12,7 +12,7 @@
 const express = require("express");
 const app = express();
 const path = require("path");
-const { MultiWritable,SyncStream } = require("./utils");
+const { MultiWritable, SyncStream } = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
@@ -418,23 +418,24 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     playContent(name, outputStream, outputStream, replay);
   }
   //console.log(outputStream);
+
   let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
     .withNoVideo()
     .inputFormat("m4a")
     .audioCodec("libmp3lame")
     .audioBitrate(128)
     .format("mp3")
-    //.on("error", err => console.error(err))
+    .on("error", err => console.log(err))
     .on("end", function() {
-      //console.warn("Unexpected end")
-      consumed = true; /*this.unpipe(outputStream)*/
+      consumed = true; //this.unpipe(outputStream)
       processer = null;
       replay();
     }) // For some reason we keep getting too much error listeners
     .stream(outputStream, { end: false })
-    .removeAllListeners("error"); // Don't close stream to keep continous play
-  console.log("end: " + processer.listenerCount("end"));
-  console.log("error: " + processer.listenerCount("error"));
+    .removeAllListeners("error"); // Don't close stream to keep continous play  
+  processer.pipe(outputStream);
+  //console.log("end: " + processer.listenerCount("end"));
+  //console.log("error: " + processer.listenerCount("error"));
 }
 const stream = require("stream");
 const { ThrottleGroup, Throttle } = require("stream-throttle");
@@ -460,7 +461,7 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = new SyncStream(config.bitrate,config.floodMax);//tg.throttle();
+    let outputStream = new SyncStream(config.bitrate, config.floodMax); //tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;
@@ -481,30 +482,33 @@ app.get("/stream/:name", async function(req, res) {
     );
     */
     //rawStream.pipe(outputStream);
-    var pass = new stream.PassThrough({ end: false });
+    /*(var pass = new stream.PassThrough({ end: false });
     outputStream.pipe(
       pass,
       { end: false }
-    );
+    );*/
 
-    contentStreams[name] = pass;
-    pass.on("end", function() {
+    contentStreams[name] = outputStream;
+    //pass.on("end", function() {
       //console.warn("PASS ENDED");
-    });
+    //});
     outputStream.on("end", function() {
       console.log("End of rate-limited stream");
+      //pass.end();
     });
-    console.log("pass end: " + pass.listenerCount("end"));
+    //console.log("pass end: " + pass.listenerCount("end"));
     console.log("output end: " + outputStream.listenerCount("error"));
   }
   contentStreams[name].pipe(
     res,
     { end: false }
   );
+  contentStreams[name].sendShock(config.flood);
   req.on("close", function() {
     contentStreams[name].unpipe(res);
     listenerCounts[name]--;
     if (listenerCounts[name] <= 0) {
+      contentStreams[name].stop();
       delete listenerCounts[name];
       try {
         delete playlistToName[name];
