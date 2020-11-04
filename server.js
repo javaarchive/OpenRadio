@@ -464,7 +464,7 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax, 1000/config.flushesPerSec); //tg.throttle();
+    let outputStream = new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax*config.flushesPerSec, 1000/config.flushesPerSec); //tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;
