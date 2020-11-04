@@ -447,7 +447,7 @@ app.get("/stream/:name", async function(req, res) {
     return;
   }
   res.set({
-    "Content-Type": "audio/mpeg",
+    "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
     "Transfer-Encoding": "chunked"
   });

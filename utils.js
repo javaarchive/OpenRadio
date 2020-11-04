@@ -27,7 +27,12 @@ class SyncStream extends Transform {
   }
   _transform(chunk, encoding, done) {
     if(this.dead){
-      throw "Dead stream";
+      this.emit("end");
+      this.emit("close");
+      this.destroy();
+      done();
+      return;
+      //throw "Dead stream";
     }
     //console.log("Got", chunk);
     if (this.curIncomplete.length > 0) {
