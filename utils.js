@@ -68,7 +68,7 @@ class SyncStream extends Transform {
   }
   flushData() {
     //console.log(this.queue);
-    if(this.shock){
+    if(this.shock && this.queue >= this.shock){
       let timesToCallAgain = this.shock - 1;
       this.shock = null;
       for(let i = 0; i < timesToCallAgain; i ++){
