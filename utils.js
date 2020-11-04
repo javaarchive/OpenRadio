@@ -80,7 +80,7 @@ class SyncStream extends Transform {
       let chunkFixedSize = this.queue.shift();
       console.log(typeof chunkFixedSize);
       console.log("Queue length ", this.queue.length);
-      console.log(chunkFixedSize);
+      //console.log(chunkFixedSize);
       this.push(chunkFixedSize);
       this.onConsume();
     } else {

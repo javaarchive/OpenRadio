@@ -23,10 +23,10 @@ $(async function() {
   controller.addEventListener("click", controllerclick);
   document.body.onkeyup = window.KeyPress;
 });
-async function play(dest, elem) {
+function play(dest, elem) {
   let audioelem = document.getElementById("streamelem");
   audioelem.src = dest;
-  await audioelem.play();
+  audioelem.play(); // await?
   //console.log(elem);
   //console.log(elem.parentElement.children[0]);
   let name = elem.parentElement.innerText;
