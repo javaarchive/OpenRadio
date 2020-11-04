@@ -425,7 +425,10 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     .audioCodec("libmp3lame")
     .audioBitrate(128)
     .format("mp3")
-    .on("error", err => console.log(err))
+    .on("error", function(err){
+      console.log(err);
+      outputStream.end();
+    })
     .on("end", function() {
       consumed = true; //this.unpipe(outputStream)
       processer = null;
@@ -461,7 +464,7 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = new SyncStream(config.bitrate, config.floodMax); //tg.throttle();
+    let outputStream = new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax, 1000/config.flushesPerSec); //tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;

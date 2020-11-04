@@ -17,7 +17,7 @@ function controllerclick(event) {
     $("#controller-icon").toggleClass("fa-play fa-pause");
   }
 }
-$(async function() {
+$(function() {
   $("#streamelem").hide();
   let controller = document.getElementById("controller");
   controller.addEventListener("click", controllerclick);

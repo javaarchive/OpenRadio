@@ -3,7 +3,7 @@ const { sendInterval } = require("./config");
 const { Passthrough, Transform } = require("stream");
 
 class SyncStream extends Transform {
-  constructor(limit, maxSize) {
+  constructor(limit, maxSize, rate=1000) {
     super();
     this.queue = [];
     this.limit = limit;
@@ -14,7 +14,7 @@ class SyncStream extends Transform {
     this.cbs = [];
    this.dead = false;
     this.shock = null;
-    this.flushInterval = setInterval(this.flushData.bind(this), 1000);
+    this.flushInterval = setInterval(this.flushData.bind(this), rate);
   }
   stop(){
     console.log("Sync Stream stopped");
