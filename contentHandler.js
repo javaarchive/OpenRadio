@@ -1,12 +1,6 @@
 const ytdl = require("ytdl-core");
 const config = require("./config");
-const fs = require("fs");
 function retrieveStream(identifier) {
-  /*if (identifier) {
-    let dummy = fs.createReadStream("streamtest.txt");
-    dummy.on("error", console.warn);
-    return dummy;
-  }*/
   if (
     identifier.startsWith("https://youtube.com") ||
     identifier.startsWith("http://youtube.com") ||

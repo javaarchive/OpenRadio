@@ -8,11 +8,11 @@
 // 3 - aboutDavid
 // Github Repo: https://github.com/javaarchive/OpenRadio
 // Feel free to make pull requests
-// And yes I type here to reload the app
+
 const express = require("express");
 const app = express();
 const path = require("path");
-const { MultiWritable, SyncStream } = require("./utils");
+const { MultiWritable } = require("./utils");
 var session = require("express-session");
 const exphbs = require("express-handlebars");
 const config = require("./config");
@@ -48,10 +48,6 @@ var stationtemplate = fs.readFileSync(
   __dirname + "/views/station.html",
   "utf8"
 );
-var stationalttemplate = fs.readFileSync(
-  __dirname + "/views/stationalt.html",
-  "utf8"
-);
 var adminplaylisttemplate = fs.readFileSync(
   __dirname + "/views/admin_playlist.html",
   "utf8"
@@ -63,7 +59,6 @@ var adminplaylistitemtemplate = fs.readFileSync(
 console.log(stationtemplate);
 const Handlebars = require("handlebars");
 var template = Handlebars.compile(stationtemplate);
-var templatealt = Handlebars.compile(stationalttemplate);
 var admin_playlist_template = Handlebars.compile(adminplaylisttemplate);
 var admin_playlist_item_template = Handlebars.compile(
   adminplaylistitemtemplate
@@ -348,15 +343,6 @@ app.get("/", async (req, res) => {
         escapedname: encodeURIComponent(streams[i])
       });
   }
-  for (var i = 0; i < streams.length; i++) {
-    output =
-      output +
-      templatealt({
-        name: streams[i],
-        streamaudiopath: "/stream/" + encodeURIComponent(streams[i]),
-        escapedname: encodeURIComponent(streams[i])
-      });
-  }
   //console.log(output);
   res.render(__dirname + "/views/index.html", {
     ...config.webexports,
@@ -393,7 +379,6 @@ io.on("connection", function(socket) {
 var playlistToName = {};
 var ffmpeg = require("fluent-ffmpeg");
 const PassThrough = require("stream").PassThrough;
-
 async function playContent(name, outputStream, realOutputStream, finish) {
   console.log("Playing playlist " + name);
   let playlist = await playlists.get(name);
@@ -418,31 +403,27 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     playContent(name, outputStream, outputStream, replay);
   }
   //console.log(outputStream);
-
   let processer = ffmpeg(rawStream, { highWaterMark: config.inputChunkSize })
     .withNoVideo()
     .inputFormat("m4a")
     .audioCodec("libmp3lame")
     .audioBitrate(128)
     .format("mp3")
-    .on("error", function(err) {
-      console.log(err);
-      outputStream.end();
-    })
+    //.on("error", err => console.error(err))
     .on("end", function() {
-      consumed = true; //this.unpipe(outputStream)
+      //console.warn("Unexpected end")
+      consumed = true; /*this.unpipe(outputStream)*/
       processer = null;
       replay();
-    })// For some reason we keep getting too much error listeners
+    }) // For some reason we keep getting too much error listeners
     .stream(outputStream, { end: false })
-   // .removeAllListeners("error"); // Don't close stream to keep continous play
-  processer.pipe(outputStream);
-  //console.log("end: " + processer.listenerCount("end"));
-  //console.log("error: " + processer.listenerCount("error"));
+    .removeAllListeners("error"); // Don't close stream to keep continous play
+  console.log("end: " + processer.listenerCount("end"));
+  console.log("error: " + processer.listenerCount("error"));
 }
-const stream = require("stream"); // standard stream module
-const { ThrottleGroup, Throttle } = require("stream-throttle");//require("./libs/stream-throttle-new");
-
+const stream = require("stream");
+const { ThrottleGroup, Throttle } = require("stream-throttle");
+var tg = new ThrottleGroup({ rate: config.bitrate });
 app.get("/stream/:name", async function(req, res) {
   if (!(await playlists.has(req.params.name))) {
     res.status(404);
@@ -452,20 +433,19 @@ app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
-    "Transfer-Encoding": "chunked",
-    "Accept-Ranges": "bytes"
+    "Transfer-Encoding": "chunked"
   });
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
 
-  if (!(name in listenerCounts)) {
-    listenerCounts[name] = 0; // Init if not already
+  if (!Object.keys(listenerCounts).includes(name)) {
+    listenerCounts[name] = 0;
   }
+
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    var tg = new ThrottleGroup({ rate: config.bitrate , chunksize:config.chunkSplitSize});
-    var outputStream = tg.throttle(); // new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax*config.flushesPerSec, 1000/config.flushesPerSec); //tg.throttle();
+    let outputStream = tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;
@@ -486,34 +466,30 @@ app.get("/stream/:name", async function(req, res) {
     );
     */
     //rawStream.pipe(outputStream);
-    /*(var pass = new stream.PassThrough({ end: false });
+    var pass = new stream.PassThrough({ end: false });
     outputStream.pipe(
       pass,
       { end: false }
-    );*/
+    );
 
-    contentStreams[name] = outputStream;
-    //pass.on("end", function() {
-    //console.warn("PASS ENDED");
-    //});
+    contentStreams[name] = pass;
+    pass.on("end", function() {
+      //console.warn("PASS ENDED");
+    });
     outputStream.on("end", function() {
       console.log("End of rate-limited stream");
-      //pass.end();
     });
-    //console.log("pass end: " + pass.listenerCount("end"));
+    console.log("pass end: " + pass.listenerCount("end"));
     console.log("output end: " + outputStream.listenerCount("error"));
   }
   contentStreams[name].pipe(
     res,
     { end: false }
   );
-  //contentStreams[name].group.sendBurst(config.flood * config.bitrate);
   req.on("close", function() {
     contentStreams[name].unpipe(res);
     listenerCounts[name]--;
     if (listenerCounts[name] <= 0) {
-      //contentStreams[name].stop();
-      
       delete listenerCounts[name];
       try {
         delete playlistToName[name];

@@ -7,7 +7,7 @@ You don't need to set `MADE_WITH` but `PASSWORD` is the admin password and `SECR
 There are a few annoying bugs and issues which I have described in my latest release: https://github.com/javaarchive/OpenRadio/releases/tag/V2.0.0
 
 The system is designed to use infinite mp3 streams so you can have your devices stream https://yourglitchurl/stream/(stream name here)
-I use this technique for my google home and my amazon alexa. You can also setup discord bots to stream from it by copying a bit of code from discordjs's documentation. It works on a modified versions of node-stream-throttle.
+I use this technique for my google home and my amazon alexa. You can also setup discord bots to stream from it by copying a bit of code from discordjs's documentation.
 
 # Inspiration
 

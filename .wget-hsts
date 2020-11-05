@@ -2,3 +2,4 @@
 # Edit at your own risk.
 # <hostname>[:<port>]	<incl. subdomains>	<created>	<max-age>
 send.firefox.com	0	1	1592965437	31536000
+codeload.github.com	0	0	1604611616	31536000
