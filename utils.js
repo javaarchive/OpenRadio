@@ -2,6 +2,7 @@ const Writable = require("stream").Writable;
 const { sendInterval } = require("./config");
 const { Passthrough, Transform } = require("stream");
 
+// Thing that still won't work
 class SyncStream extends Transform {
   constructor(limit, maxSize, rate=1000) {
     super();

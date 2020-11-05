@@ -1,10 +1,10 @@
 module.exports = {
-  brand: "OpenRadio",
+  brand: "OpenRadio Dev",
   webexports: {
-    display_brand: "OpenRadio"
+    display_brand: "OpenRadio Developement"
   },
-  chunkSize: 16384,
-  inputChunkSize: 16384,
+  chunkSize: 1024,
+  inputChunkSize: 1024,
   mode: "ordered",
   /*
   Ordered: Songs play in order of playlist and loop back after you're done
@@ -15,6 +15,6 @@ module.exports = {
   flushesPerSec: 1,
   databasefilename: "sqlite://playlists.db",
   authurl: "/admin",
-  flood: 100
+  flood: 10
 };
 // Configure names here

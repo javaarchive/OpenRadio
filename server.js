@@ -4,7 +4,7 @@
 // May not be infinite depending on your reverse proxy
 // Contribution wall:
 // 1 -
-// 2 - 
+// 2 -
 // 3 - aboutDavid
 // Github Repo: https://github.com/javaarchive/OpenRadio
 // Feel free to make pull requests
@@ -425,7 +425,7 @@ async function playContent(name, outputStream, realOutputStream, finish) {
     .audioCodec("libmp3lame")
     .audioBitrate(128)
     .format("mp3")
-    .on("error", function(err){
+    .on("error", function(err) {
       console.log(err);
       outputStream.end();
     })
@@ -433,16 +433,15 @@ async function playContent(name, outputStream, realOutputStream, finish) {
       consumed = true; //this.unpipe(outputStream)
       processer = null;
       replay();
-    }) // For some reason we keep getting too much error listeners
+    })// For some reason we keep getting too much error listeners
     .stream(outputStream, { end: false })
-    .removeAllListeners("error"); // Don't close stream to keep continous play  
+   // .removeAllListeners("error"); // Don't close stream to keep continous play
   processer.pipe(outputStream);
   //console.log("end: " + processer.listenerCount("end"));
   //console.log("error: " + processer.listenerCount("error"));
 }
-const stream = require("stream");
-//const { ThrottleGroup, Throttle } = require("stream-throttle");
-//var tg = new ThrottleGroup({ rate: config.bitrate });
+const stream = require("stream"); // standard stream module
+const { ThrottleGroup, Throttle } = require("./libs/stream-throttle-new");
 
 app.get("/stream/:name", async function(req, res) {
   if (!(await playlists.has(req.params.name))) {
@@ -453,7 +452,8 @@ app.get("/stream/:name", async function(req, res) {
   res.set({
     "Content-Type": "audio/mpeg3",
     "Content-Range": "bytes 0-",
-    "Transfer-Encoding": "chunked", 'Accept-Ranges': 'bytes' 
+    "Transfer-Encoding": "chunked",
+    "Accept-Ranges": "bytes"
   });
   res.set("Cache-Control", "no-store"); // WHY WOULD YOU WANNA CACHE A LIVESTREAM
   let name = req.params.name;
@@ -464,7 +464,8 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    let outputStream = new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax*config.flushesPerSec, 1000/config.flushesPerSec); //tg.throttle();
+    var tg = new ThrottleGroup({ rate: config.bitrate });
+    var outputStream = tg.throttle(); // new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax*config.flushesPerSec, 1000/config.flushesPerSec); //tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
         return;
@@ -493,7 +494,7 @@ app.get("/stream/:name", async function(req, res) {
 
     contentStreams[name] = outputStream;
     //pass.on("end", function() {
-      //console.warn("PASS ENDED");
+    //console.warn("PASS ENDED");
     //});
     outputStream.on("end", function() {
       console.log("End of rate-limited stream");
@@ -506,12 +507,13 @@ app.get("/stream/:name", async function(req, res) {
     res,
     { end: false }
   );
-  contentStreams[name].sendShock(config.flood);
+  //contentStreams[name].group.sendBurst(config.flood * config.bitrate);
   req.on("close", function() {
     contentStreams[name].unpipe(res);
     listenerCounts[name]--;
     if (listenerCounts[name] <= 0) {
-      contentStreams[name].stop();
+      //contentStreams[name].stop();
+      
       delete listenerCounts[name];
       try {
         delete playlistToName[name];
