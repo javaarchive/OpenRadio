@@ -15,6 +15,7 @@ module.exports = {
   flushesPerSec: 1,
   databasefilename: "sqlite://playlists.db",
   authurl: "/admin",
-  flood: 10
+  flood: 10,
+  chunkSplitSize: 128
 };
 // Configure names here

@@ -441,7 +441,7 @@ async function playContent(name, outputStream, realOutputStream, finish) {
   //console.log("error: " + processer.listenerCount("error"));
 }
 const stream = require("stream"); // standard stream module
-const { ThrottleGroup, Throttle } = require("./libs/stream-throttle-new");
+const { ThrottleGroup, Throttle } = require("stream-throttle");//require("./libs/stream-throttle-new");
 
 app.get("/stream/:name", async function(req, res) {
   if (!(await playlists.has(req.params.name))) {
@@ -464,7 +464,7 @@ app.get("/stream/:name", async function(req, res) {
   listenerCounts[name]++;
   console.log("Serving Stream " + name);
   if (!Object.keys(contentStreams).includes(name)) {
-    var tg = new ThrottleGroup({ rate: config.bitrate });
+    var tg = new ThrottleGroup({ rate: config.bitrate , chunksize:config.chunkSplitSize});
     var outputStream = tg.throttle(); // new SyncStream(config.bitrate/config.flushesPerSec, config.floodMax*config.flushesPerSec, 1000/config.flushesPerSec); //tg.throttle();
     function replay() {
       if (!isAnyoneListening(name)) {
